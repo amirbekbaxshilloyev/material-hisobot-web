@@ -94,7 +94,7 @@
       <h2><span class="ico">🔗</span><span><small>4-bo‘lim</small>Tashqi xizmatlar</span></h2>
       <ul>
         <li>Telegram — xabarlarni yetkazadi.</li>
-        <li>Didox — hujjatlar faqat O‘QIB olinadi: bot hech narsani imzolamaydi, rad etmaydi va o‘chirmaydi.</li>
+        <li>Didox — hujjatlar o‘qib olinadi. Hujjat yaratish, imzolash yoki rad etish — FAQAT siz botda buyruq berib, tasdiqlaganingizda va sizning ERI kalitingiz bilan. Bot o‘zi hech narsani imzolamaydi va hujjatlarni o‘chirmaydi; har amal jurnalga yoziladi.</li>
         <li>Google — faqat egasi ulagan bo‘lsa, uning hisobida.</li>
         <li>Anthropic (Claude) — dasturni tuzatish uchun texnik xato yozuvlari tahlil qilinishi mumkin (parol va tokenlarsiz). Tashkilot hisobi bazasi uzatilmaydi.</li>
         <li>Davlat organlariga — faqat qonun talab qilganda.</li>
@@ -119,7 +119,9 @@
   var q = new URLSearchParams(location.search);
   var view = q.get('view') === '1';
   var tg = window.Telegram && window.Telegram.WebApp;
-  var inTg = Boolean(tg && tg.initData);
+  // Pastki klaviatura tugmasidan ochilganda initData BO'SH keladi (Telegram shunday) —
+  // Telegram ichidaligini platformadan bilamiz (brauzerda — 'unknown')
+  var inTg = Boolean(tg && tg.platform && tg.platform !== 'unknown');
   var bar = document.getElementById('bar');
   var reached = false;
 
