@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="uz">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Material Hisobot — maxfiylik siyosati</title>
+<meta name="description" content="Material Hisobot Telegram-botining maxfiylik siyosati">
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+  :root {
+    --bg: var(--tg-theme-secondary-bg-color, #EFEFF4);
+    --card: var(--tg-theme-section-bg-color, var(--tg-theme-bg-color, #FFFFFF));
+    --text: var(--tg-theme-text-color, #1C1C1E);
+    --hint: var(--tg-theme-hint-color, #8E8E93);
+    --head: var(--tg-theme-section-header-text-color, #2B6CD8);
+    --accent: var(--tg-theme-button-color, #2B6CD8);
+    --line: color-mix(in srgb, var(--hint) 22%, transparent);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not(.tg) { --bg: #0E1621; --card: #17212B; --text: #F5F5F5; --hint: #708499; --head: #6AB2F2; --accent: #5288C1; }
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--bg); color: var(--text); }
+  body { font: 15px/1.5 -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; -webkit-font-smoothing: antialiased; }
+  .progress { position: fixed; inset: 0 0 auto 0; height: 3px; z-index: 5; background: transparent; }
+  .progress i { display: block; height: 100%; width: 0; background: var(--accent); transition: width .15s; }
+  main { max-width: 640px; margin: 0 auto; padding: 16px 16px 28px; }
+  header { display: flex; gap: 14px; align-items: center; padding: 18px; margin-bottom: 14px; border-radius: 16px; color: #fff;
+    background: linear-gradient(135deg, #3B8BFF, #1D5FD6 55%, #0D3A8C); }
+  header h1 { margin: 0; font-size: 19px; line-height: 1.25; font-weight: 700; }
+  header p { margin: 3px 0 0; font-size: 13px; opacity: .85; }
+  .lead { margin: 0 4px 14px; color: var(--hint); font-size: 14px; }
+  .card { background: var(--card); border-radius: 14px; padding: 14px 16px 6px; margin-bottom: 12px; }
+  .card h2 { display: flex; gap: 10px; align-items: flex-start; margin: 0 0 6px; font-size: 16px; line-height: 1.35; color: var(--head); font-weight: 650; }
+  .card h2 .ico { font-size: 20px; line-height: 1.1; }
+  .card h2 small { display: block; font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--hint); font-weight: 600; }
+  .card ul { list-style: none; margin: 0; padding: 0; }
+  .card li { position: relative; padding: 9px 0 9px 16px; border-top: 1px solid var(--line); }
+  .card li:first-child { border-top: 0; }
+  .card li::before { content: ''; position: absolute; left: 2px; top: 18px; width: 5px; height: 5px; border-radius: 50%; background: var(--accent); }
+  .end { text-align: center; color: var(--hint); font-size: 13px; padding: 10px 8px 4px; }
+  .end b { color: var(--text); }
+  .signed { display: none; margin: 4px 0 0; padding: 12px 16px; border-radius: 12px; background: var(--card); text-align: center; font-weight: 600; }
+  .note { display: none; margin-top: 10px; text-align: center; color: var(--hint); font-size: 13px; }
+</style>
+</head>
+<body>
+<div class="progress"><i id="bar"></i></div>
+<main>
+  <header>
+    <svg viewBox="150 140 340 400" width="44" height="52" aria-hidden="true">
+  <g stroke-linejoin="round" stroke-width="12">
+    <path d="M164 246 L320 336 L320 512 L164 422 Z" fill="#DCE7FB" stroke="#DCE7FB"/>
+    <path d="M320 336 L476 246 L476 422 L320 512 Z" fill="#C3D6F7" stroke="#C3D6F7"/>
+    <path d="M320 156 L476 246 L320 336 L164 246 Z" fill="#FFFFFF" stroke="#FFFFFF"/>
+  </g>
+  <g transform="matrix(1.56 -0.9 0 1.76 320 336)" fill="#1D5FD6">
+    <rect x="16" y="58" width="16" height="30" rx="2"/><rect x="42" y="42" width="16" height="46" rx="2"/><rect x="68" y="24" width="16" height="64" rx="2"/>
+  </g>
+</svg>
+    <div>
+      <h1>Maxfiylik siyosati</h1>
+      <p>Material Hisobot · yangilangan 11.10.2026</p>
+    </div>
+  </header>
+  <p class="lead">Botdan foydalanishdan oldin qanday ma’lumot olinishi, qayerda saqlanishi va huquqlaringiz bilan tanishib chiqing.</p>
+
+    <section class="card">
+      <h2><span class="ico">🤝</span><span><small>1-bo‘lim</small>Bot nima va kim javob beradi</span></h2>
+      <ul>
+        <li>Material Hisobot — buxgalter uchun ombor (material) hisobini yurituvchi Telegram-bot. Ma’lumotlar faqat shu ish uchun ishlatiladi: reklama yo‘q, hech kimga sotilmaydi.</li>
+        <li>Ma’lumotlar uchun botning egasi (uni o‘rnatgan buxgalter yoki tashkilot) javob beradi. Dastur ishlab chiquvchisi bilan aloqa: Telegram @MrAmirbec yoki +998 50 705 06 23.</li>
+        <li>Bot egasi botdan foydalanishni boshlashdan oldin shu siyosat bilan tanishib, rozilik bildiradi (imzo). Rozilik sanasi saqlanadi; siyosat o‘zgarsa — qayta so‘raladi.</li>
+      </ul>
+    </section>
+    <section class="card">
+      <h2><span class="ico">📋</span><span><small>2-bo‘lim</small>Qanday ma’lumot olinadi</span></h2>
+      <ul>
+        <li>Telegram: ID raqamingiz, profilingizdagi ism, botga yozgan xabar va bosgan tugmalaringiz (botni ishlatish uchun), botni oxirgi marta qachon ochganingiz (necha kishi ishlatishini bilish uchun).</li>
+        <li>Taklif havolasi bilan kirganlar: rolingiz (buxgalter yoki firma egasi) va qaysi tashkilotlarni ko‘rishingiz.</li>
+        <li>Tashkilot ma’lumotlari: Didox’dagi hujjatlar (hisob-fakturalar, yuk xatlari, shartnomalar) — kontragent nomi va INN, tovarlar, miqdor, summalar; siz yuborgan Excel fayllar (boshlang‘ich qoldiq, kassa cheklari, inventarizatsiya).</li>
+        <li>Didox paroli va tokenlar: faqat bot o‘rnatilgan kompyuter yoki serverdagi maxfiy sozlama faylida. Parol yozilgan xabar chatdan darhol o‘chiriladi, jurnallarda yashiriladi.</li>
+      </ul>
+    </section>
+    <section class="card">
+      <h2><span class="ico">🗄</span><span><small>3-bo‘lim</small>Qayerda saqlanadi va kim ko‘radi</span></h2>
+      <ul>
+        <li>Bot egasining kompyuteri yoki serverida. Zaxira nusxa har kuni olinadi va 14 kundan keyin o‘chadi.</li>
+        <li>Egasi Google’ni ulagan bo‘lsa — hisobotlar va hujjat PDF’lari egasining o‘z Google jadvali va Drive’ida.</li>
+        <li>Kirish rol bo‘yicha: bot egasi — hammasini, buxgalter — o‘ziga ruxsat berilgan tashkilotlarni, firma egasi — faqat o‘z tashkilotini ko‘radi.</li>
+      </ul>
+    </section>
+    <section class="card">
+      <h2><span class="ico">🔗</span><span><small>4-bo‘lim</small>Tashqi xizmatlar</span></h2>
+      <ul>
+        <li>Telegram — xabarlarni yetkazadi.</li>
+        <li>Didox — hujjatlar faqat O‘QIB olinadi: bot hech narsani imzolamaydi, rad etmaydi va o‘chirmaydi.</li>
+        <li>Google — faqat egasi ulagan bo‘lsa, uning hisobida.</li>
+        <li>Anthropic (Claude) — dasturni tuzatish uchun texnik xato yozuvlari tahlil qilinishi mumkin (parol va tokenlarsiz). Tashkilot hisobi bazasi uzatilmaydi.</li>
+        <li>Davlat organlariga — faqat qonun talab qilganda.</li>
+      </ul>
+    </section>
+    <section class="card">
+      <h2><span class="ico">⚖️</span><span><small>5-bo‘lim</small>Saqlash muddati va huquqlaringiz</span></h2>
+      <ul>
+        <li>Ma’lumot kirish huquqingiz bor ekan saqlanadi. Botdan chiqarilsangiz — foydalanuvchilar ro‘yxatidan o‘chirilasiz.</li>
+        <li>Qanday ma’lumot borligini so‘rash, tuzatish yoki o‘chirishni talab qilish huquqingiz bor: bot egasiga yoki Telegram @MrAmirbec yoki +998 50 705 06 23 ga yozing.</li>
+        <li>/clear — chatdagi xabarlarni tozalaydi. Botni Telegram’da to‘xtatib (bloklab) qo‘yishingiz mumkin — bot sizga boshqa yozmaydi.</li>
+        <li>Siyosat O‘zbekiston Respublikasining «Shaxsga doir ma’lumotlar to‘g‘risida»gi Qonuniga muvofiq. O‘zgarsa — yangisi shu yerda, sanasi bilan.</li>
+      </ul>
+    </section>
+  <div class="end" id="end">✍️ <b>Oxiriga yetdingiz.</b><br>Pastdagi tugma bilan tanishib chiqqaningizni tasdiqlang.</div>
+  <div class="signed" id="signed"></div>
+  <div class="note" id="note">Tasdiqlash — botdagi «📄 Maxfiylik siyosati» tugmasi orqali ochilganda.</div>
+</main>
+<script>
+(function () {
+  var VERSION = "11.10.2026";
+  var q = new URLSearchParams(location.search);
+  var view = q.get('view') === '1';
+  var tg = window.Telegram && window.Telegram.WebApp;
+  var inTg = Boolean(tg && tg.initData);
+  var bar = document.getElementById('bar');
+  var reached = false;
+
+  if (inTg) {
+    document.documentElement.classList.add('tg');
+    tg.ready();
+    tg.expand();
+    try { tg.setHeaderColor('secondary_bg_color'); } catch (e) {}
+  }
+
+  if (view) {
+    document.getElementById('end').style.display = 'none';
+    var s = q.get('signed');
+    var box = document.getElementById('signed');
+    box.textContent = s ? '✍️ Imzolangan — ' + s : '🔒 Faqat o‘qish uchun';
+    box.style.display = 'block';
+  } else if (!inTg) {
+    document.getElementById('end').style.display = 'none';
+    document.getElementById('note').style.display = 'block';
+  }
+
+  var main = inTg && !view ? tg.MainButton : null;
+  if (main) {
+    main.setParams({ text: '⬇️ Oxirigacha o‘qing', is_active: false, is_visible: true, color: '#9AA7B5', text_color: '#FFFFFF' });
+    main.onClick(function () {
+      if (!reached) return;
+      try { tg.HapticFeedback.notificationOccurred('success'); } catch (e) {}
+      tg.sendData(JSON.stringify({ t: 'privacy', v: VERSION }));
+    });
+  }
+
+  function check() {
+    var max = document.documentElement.scrollHeight - window.innerHeight;
+    var y = window.scrollY || document.documentElement.scrollTop;
+    bar.style.width = (max > 0 ? Math.min(100, (y / max) * 100) : 100) + '%';
+    if (!reached && (max <= 0 || y >= max - 24)) {
+      reached = true;
+      if (main) {
+        var p = tg.themeParams || {};
+        main.setParams({ text: '✍️ Tanishib chiqdim, roziman', is_active: true, color: p.button_color || '#2B6CD8', text_color: p.button_text_color || '#FFFFFF' });
+        try { tg.HapticFeedback.impactOccurred('light'); } catch (e) {}
+      }
+    }
+  }
+  window.addEventListener('scroll', check, { passive: true });
+  window.addEventListener('resize', check);
+  if (tg && tg.onEvent) tg.onEvent('viewportChanged', check);
+  setTimeout(check, 300);
+})();
+</script>
+</body>
+</html>
