@@ -106,9 +106,10 @@
         <li><span class="n">5.1.</span><span>Telegram — xabarlarni yetkazish.</span></li>
         <li><span class="n">5.2.</span><span>Didox — elektron hujjatlarni olish. Hujjatni yaratish, imzolash yoki rad etish faqat foydalanuvchi buyrug‘i va tasdig‘i asosida, uning elektron raqamli imzosi (ERI) bilan amalga oshiriladi. Hujjatlar o‘chirilmaydi; har bir amal jurnalda qayd etiladi.</span></li>
         <li><span class="n">5.3.</span><span>Google (Sheets, Drive) — Bot egasi ulagan taqdirda, uning hisobida.</span></li>
-        <li><span class="n">5.4.</span><span>GitHub Pages — Botning veb-sahifalari joylashgan xosting. Sahifalar ma’lumotni faqat foydalanuvchi qurilmasida ko‘rsatadi va serverga uzatmaydi.</span></li>
-        <li><span class="n">5.5.</span><span>Anthropic — dasturiy ta’minotni texnik qo‘llab-quvvatlash uchun xato jurnallari (parol, token va hisob ma’lumotlarisiz).</span></li>
-        <li><span class="n">5.6.</span><span>Davlat organlariga ma’lumotlar faqat qonunda belgilangan hollarda taqdim etiladi.</span></li>
+        <li><span class="n">5.4.</span><span>GitHub Pages — Botning veb-sahifalari joylashgan xosting; sahifalar shaxsga doir ma’lumotlarni qabul qilmaydi.</span></li>
+        <li><span class="n">5.5.</span><span>Cloudflare — boshqaruv paneliga shifrlangan ulanish (tunnel); ma’lumotlar unda saqlanmaydi.</span></li>
+        <li><span class="n">5.6.</span><span>Anthropic — dasturiy ta’minotni texnik qo‘llab-quvvatlash uchun xato jurnallari (parol, token va hisob ma’lumotlarisiz).</span></li>
+        <li><span class="n">5.7.</span><span>Davlat organlariga ma’lumotlar faqat qonunda belgilangan hollarda taqdim etiladi.</span></li>
       </ol>
     </section>
     <section class="card">
@@ -132,7 +133,7 @@
 </main>
 <script>
 (function () {
-  var VERSION = "12.10.2026";
+  var VERSION = "12.10.2026.2";
   var q = new URLSearchParams(location.search);
   var view = q.get('view') === '1';
   var tg = window.Telegram && window.Telegram.WebApp;
