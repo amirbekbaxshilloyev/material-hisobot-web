@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Material Hisobot — maxfiylik siyosati</title>
+<title>Material Hisobot — Maxfiylik siyosati</title>
 <meta name="description" content="Material Hisobot Telegram-botining maxfiylik siyosati">
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <style>
@@ -32,12 +32,12 @@
   .lead { margin: 0 4px 14px; color: var(--hint); font-size: 14px; }
   .card { background: var(--card); border-radius: 14px; padding: 14px 16px 6px; margin-bottom: 12px; }
   .card h2 { display: flex; gap: 10px; align-items: flex-start; margin: 0 0 6px; font-size: 16px; line-height: 1.35; color: var(--head); font-weight: 650; }
-  .card h2 .ico { font-size: 20px; line-height: 1.1; }
-  .card h2 small { display: block; font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--hint); font-weight: 600; }
-  .card ul { list-style: none; margin: 0; padding: 0; }
-  .card li { position: relative; padding: 9px 0 9px 16px; border-top: 1px solid var(--line); }
+  .card h2 { text-transform: uppercase; letter-spacing: .03em; font-size: 14.5px; }
+  .card h2 .num { min-width: 18px; }
+  .card ol { list-style: none; margin: 0; padding: 0; }
+  .card li { display: flex; gap: 10px; padding: 9px 0; border-top: 1px solid var(--line); }
   .card li:first-child { border-top: 0; }
-  .card li::before { content: ''; position: absolute; left: 2px; top: 18px; width: 5px; height: 5px; border-radius: 50%; background: var(--accent); }
+  .card li .n { flex: 0 0 auto; min-width: 30px; color: var(--hint); font-variant-numeric: tabular-nums; font-weight: 600; }
   .end { text-align: center; color: var(--hint); font-size: 13px; padding: 10px 8px 4px; }
   .end b { color: var(--text); }
   .signed { display: none; margin: 4px 0 0; padding: 12px 16px; border-radius: 12px; background: var(--card); text-align: center; font-weight: 600; }
@@ -60,62 +60,79 @@
 </svg>
     <div>
       <h1>Maxfiylik siyosati</h1>
-      <p>Material Hisobot · yangilangan 11.10.2026</p>
+      <p>Material Hisobot · tahrir 12.10.2026</p>
     </div>
   </header>
-  <p class="lead">Botdan foydalanishdan oldin qanday ma’lumot olinishi, qayerda saqlanishi va huquqlaringiz bilan tanishib chiqing.</p>
+  <p class="lead">Shaxsga doir ma’lumotlarga ishlov berish tartibi va shartlari.</p>
 
     <section class="card">
-      <h2><span class="ico">🤝</span><span><small>1-bo‘lim</small>Bot nima va kim javob beradi</span></h2>
-      <ul>
-        <li>Material Hisobot — buxgalter uchun ombor (material) hisobini yurituvchi Telegram-bot. Ma’lumotlar faqat shu ish uchun ishlatiladi: reklama yo‘q, hech kimga sotilmaydi.</li>
-        <li>Ma’lumotlar uchun botning egasi (uni o‘rnatgan buxgalter yoki tashkilot) javob beradi. Dastur ishlab chiquvchisi bilan aloqa: Telegram @MrAmirbec yoki +998 (50) 705-06-23.</li>
-        <li>Bot egasi botdan foydalanishni boshlashdan oldin shu siyosat bilan tanishib, rozilik bildiradi (imzo). Rozilik sanasi saqlanadi; siyosat o‘zgarsa — qayta so‘raladi.</li>
-      </ul>
+      <h2><span class="num">1.</span><span>Umumiy qoidalar</span></h2>
+      <ol>
+        <li><span class="n">1.1.</span><span>Mazkur Maxfiylik siyosati (keyingi o‘rinlarda — Siyosat) «Material Hisobot» Telegram-boti (keyingi o‘rinlarda — Bot) orqali shaxsga doir ma’lumotlarga ishlov berish tartibi va shartlarini belgilaydi.</span></li>
+        <li><span class="n">1.2.</span><span>Siyosat O‘zbekiston Respublikasining 2019-yil 2-iyuldagi O‘RQ-547-son «Shaxsga doir ma’lumotlar to‘g‘risida»gi Qonuniga muvofiq ishlab chiqilgan.</span></li>
+        <li><span class="n">1.3.</span><span>Ma’lumotlar operatori — Botni o‘rnatgan va undan foydalanayotgan shaxs (keyingi o‘rinlarda — Bot egasi). Dasturiy ta’minot ishlab chiquvchisi (keyingi o‘rinlarda — Ishlab chiquvchi) Botga texnik xizmat ko‘rsatadi.</span></li>
+        <li><span class="n">1.4.</span><span>Bot egasi Botdan foydalanishni boshlashdan oldin Siyosat bilan tanishib, unga elektron shaklda rozilik bildiradi. Rozilik sanasi va Siyosat tahriri saqlanadi.</span></li>
+      </ol>
     </section>
     <section class="card">
-      <h2><span class="ico">📋</span><span><small>2-bo‘lim</small>Qanday ma’lumot olinadi</span></h2>
-      <ul>
-        <li>Telegram: ID raqamingiz, profilingizdagi ism, botga yozgan xabar va bosgan tugmalaringiz (botni ishlatish uchun), botni oxirgi marta qachon ochganingiz (necha kishi ishlatishini bilish uchun).</li>
-        <li>Taklif havolasi bilan kirganlar: rolingiz (buxgalter yoki firma egasi) va qaysi tashkilotlarni ko‘rishingiz.</li>
-        <li>Tashkilot ma’lumotlari: Didox’dagi hujjatlar (hisob-fakturalar, yuk xatlari, shartnomalar) — kontragent nomi va INN, tovarlar, miqdor, summalar; siz yuborgan Excel fayllar (boshlang‘ich qoldiq, kassa cheklari, inventarizatsiya).</li>
-        <li>Didox paroli va tokenlar: faqat bot o‘rnatilgan kompyuter yoki serverdagi maxfiy sozlama faylida. Parol yozilgan xabar chatdan darhol o‘chiriladi, jurnallarda yashiriladi.</li>
-      </ul>
+      <h2><span class="num">2.</span><span>Ishlov beriladigan ma’lumotlar</span></h2>
+      <ol>
+        <li><span class="n">2.1.</span><span>Foydalanuvchi ma’lumotlari: Telegram identifikatori, profil nomi, Botdagi roli va kirish huquqlari, Botdan foydalanish vaqti.</span></li>
+        <li><span class="n">2.2.</span><span>Tashkilot ma’lumotlari: Didox elektron hujjatlarining rekvizitlari (kontragent nomi va STIR, tovar, miqdor, summa) hamda foydalanuvchi yuklagan fayllar.</span></li>
+        <li><span class="n">2.3.</span><span>Autentifikatsiya ma’lumotlari (Didox paroli, kalit va tokenlar) faqat Bot egasining texnik vositasidagi himoyalangan sozlama faylida saqlanadi; chat xabarlari va jurnallarda saqlanmaydi.</span></li>
+        <li><span class="n">2.4.</span><span>Bot maxsus toifadagi va biometrik shaxsga doir ma’lumotlarga ishlov bermaydi.</span></li>
+      </ol>
     </section>
     <section class="card">
-      <h2><span class="ico">🗄</span><span><small>3-bo‘lim</small>Qayerda saqlanadi va kim ko‘radi</span></h2>
-      <ul>
-        <li>Bot egasining kompyuteri yoki serverida. Zaxira nusxa har kuni olinadi va 14 kundan keyin o‘chadi.</li>
-        <li>Egasi Google’ni ulagan bo‘lsa — hisobotlar va hujjat PDF’lari egasining o‘z Google jadvali va Drive’ida.</li>
-        <li>Kirish rol bo‘yicha: bot egasi — hammasini, buxgalter — o‘ziga ruxsat berilgan tashkilotlarni, firma egasi — faqat o‘z tashkilotini ko‘radi.</li>
-      </ul>
+      <h2><span class="num">3.</span><span>Ishlov berish maqsadi va asosi</span></h2>
+      <ol>
+        <li><span class="n">3.1.</span><span>Maqsad: tashkilotlarning ombor (material) hisobini yuritish, hisobotlar tayyorlash, foydalanuvchilarni xabardor qilish va kirish huquqlarini boshqarish.</span></li>
+        <li><span class="n">3.2.</span><span>Asos: shaxsga doir ma’lumotlar subyektining roziligi va Bot egasi bilan tuzilgan shartnoma.</span></li>
+        <li><span class="n">3.3.</span><span>Ma’lumotlar reklama maqsadida ishlatilmaydi va uchinchi shaxslarga sotilmaydi.</span></li>
+      </ol>
     </section>
     <section class="card">
-      <h2><span class="ico">🔗</span><span><small>4-bo‘lim</small>Tashqi xizmatlar</span></h2>
-      <ul>
-        <li>Telegram — xabarlarni yetkazadi.</li>
-        <li>Didox — hujjatlar o‘qib olinadi. Hujjat yaratish, imzolash yoki rad etish — FAQAT siz botda buyruq berib, tasdiqlaganingizda va sizning ERI kalitingiz bilan. Bot o‘zi hech narsani imzolamaydi va hujjatlarni o‘chirmaydi; har amal jurnalga yoziladi.</li>
-        <li>Google — faqat egasi ulagan bo‘lsa, uning hisobida.</li>
-        <li>Anthropic (Claude) — dasturni tuzatish uchun texnik xato yozuvlari tahlil qilinishi mumkin (parol va tokenlarsiz). Tashkilot hisobi bazasi uzatilmaydi.</li>
-        <li>Davlat organlariga — faqat qonun talab qilganda.</li>
-      </ul>
+      <h2><span class="num">4.</span><span>Saqlash va himoya qilish</span></h2>
+      <ol>
+        <li><span class="n">4.1.</span><span>Ma’lumotlar Bot egasining texnik vositalarida (kompyuter yoki server) saqlanadi. Zaxira nusxalar har kuni yaratiladi va 14 kun saqlanadi.</span></li>
+        <li><span class="n">4.2.</span><span>Kirish rolga qarab cheklanadi: Bot egasi — barcha ma’lumotlarga, buxgalter — o‘ziga ruxsat berilgan tashkilotlarga, tashkilot egasi — faqat o‘z tashkilotiga.</span></li>
+        <li><span class="n">4.3.</span><span>Botga kirish faqat Bot egasi bergan bir martalik taklif havolasi orqali amalga oshiriladi. Maxfiy qiymat yuborilgan xabarlar darhol o‘chiriladi.</span></li>
+        <li><span class="n">4.4.</span><span>Foydalanuvchi ma’lumotlari kirish huquqi amal qilgan davrda saqlanadi. Tashkilot hisob ma’lumotlari Bot egasining qaroriga ko‘ra, buxgalteriya hisobi to‘g‘risidagi qonunchilik doirasida saqlanadi.</span></li>
+      </ol>
     </section>
     <section class="card">
-      <h2><span class="ico">⚖️</span><span><small>5-bo‘lim</small>Saqlash muddati va huquqlaringiz</span></h2>
-      <ul>
-        <li>Ma’lumot kirish huquqingiz bor ekan saqlanadi. Botdan chiqarilsangiz — foydalanuvchilar ro‘yxatidan o‘chirilasiz.</li>
-        <li>Qanday ma’lumot borligini so‘rash, tuzatish yoki o‘chirishni talab qilish huquqingiz bor: bot egasiga yoki Telegram @MrAmirbec yoki +998 (50) 705-06-23 ga yozing.</li>
-        <li>/clear — chatdagi xabarlarni tozalaydi. Botni Telegram’da to‘xtatib (bloklab) qo‘yishingiz mumkin — bot sizga boshqa yozmaydi.</li>
-        <li>Siyosat O‘zbekiston Respublikasining «Shaxsga doir ma’lumotlar to‘g‘risida»gi Qonuniga muvofiq. O‘zgarsa — yangisi shu yerda, sanasi bilan.</li>
-      </ul>
+      <h2><span class="num">5.</span><span>Uchinchi shaxslar</span></h2>
+      <ol>
+        <li><span class="n">5.1.</span><span>Telegram — xabarlarni yetkazish.</span></li>
+        <li><span class="n">5.2.</span><span>Didox — elektron hujjatlarni olish. Hujjatni yaratish, imzolash yoki rad etish faqat foydalanuvchi buyrug‘i va tasdig‘i asosida, uning elektron raqamli imzosi (ERI) bilan amalga oshiriladi. Hujjatlar o‘chirilmaydi; har bir amal jurnalda qayd etiladi.</span></li>
+        <li><span class="n">5.3.</span><span>Google (Sheets, Drive) — Bot egasi ulagan taqdirda, uning hisobida.</span></li>
+        <li><span class="n">5.4.</span><span>GitHub Pages — Botning veb-sahifalari joylashgan xosting. Sahifalar ma’lumotni faqat foydalanuvchi qurilmasida ko‘rsatadi va serverga uzatmaydi.</span></li>
+        <li><span class="n">5.5.</span><span>Anthropic — dasturiy ta’minotni texnik qo‘llab-quvvatlash uchun xato jurnallari (parol, token va hisob ma’lumotlarisiz).</span></li>
+        <li><span class="n">5.6.</span><span>Davlat organlariga ma’lumotlar faqat qonunda belgilangan hollarda taqdim etiladi.</span></li>
+      </ol>
     </section>
-  <div class="end" id="end">✍️ <b>Oxiriga yetdingiz.</b><br>Pastdagi tugma bilan tanishib chiqqaningizni tasdiqlang.</div>
+    <section class="card">
+      <h2><span class="num">6.</span><span>Subyektning huquqlari</span></h2>
+      <ol>
+        <li><span class="n">6.1.</span><span>Shaxsga doir ma’lumotlar subyekti o‘z ma’lumotlari to‘g‘risida axborot olish, ularni aniqlashtirish, o‘chirish va rozilikni qaytarib olish huquqiga ega.</span></li>
+        <li><span class="n">6.2.</span><span>Murojaatlar Bot egasiga yoki Ishlab chiquvchiga yuboriladi: Telegram @MrAmirbec, tel. +998 (50) 705-06-23.</span></li>
+        <li><span class="n">6.3.</span><span>Subyekt o‘z huquqlari buzilgan deb hisoblasa, vakolatli davlat organiga yoki sudga murojaat qilishga haqli.</span></li>
+      </ol>
+    </section>
+    <section class="card">
+      <h2><span class="num">7.</span><span>Yakuniy qoidalar</span></h2>
+      <ol>
+        <li><span class="n">7.1.</span><span>Siyosat Bot egasi rozilik bildirgan kundan e’tiboran kuchga kiradi.</span></li>
+        <li><span class="n">7.2.</span><span>Siyosatga o‘zgartirishlar yangi tahrirda e’lon qilinadi; bunda Bot egasidan qayta rozilik olinadi.</span></li>
+      </ol>
+    </section>
+  <div class="end" id="end"><b>Siyosat matni tugadi.</b><br>Tanishib chiqqaningizni pastdagi tugma bilan tasdiqlang.</div>
   <div class="signed" id="signed"></div>
   <div class="note" id="note">Tasdiqlash — botdagi «📄 Maxfiylik siyosati» tugmasi orqali ochilganda.</div>
 </main>
 <script>
 (function () {
-  var VERSION = "11.10.2026";
+  var VERSION = "12.10.2026";
   var q = new URLSearchParams(location.search);
   var view = q.get('view') === '1';
   var tg = window.Telegram && window.Telegram.WebApp;
