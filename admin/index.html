@@ -43,7 +43,19 @@
   .logo { width: 44px; height: 44px; border-radius: 13px; display: grid; place-items: center; color: #fff; background: linear-gradient(135deg, #3B8BFF, #1D5FD6 55%, #0D3A8C); box-shadow: 0 4px 12px rgba(29, 95, 214, .3); }
   .logo svg { width: 26px; height: 26px; }
   .top h1 { margin: 0; font-size: 19px; line-height: 1.2; letter-spacing: -.01em; }
-  .top p { margin: 2px 0 0; color: var(--hint); font-size: 12.5px; }
+  .top p { margin: 2px 0 0; color: var(--hint); font-size: 12.5px; display: flex; align-items: center; gap: 6px; }
+  .top .refresh { margin-left: auto; border: 0; background: var(--card); color: var(--accent); width: 40px; height: 40px; border-radius: 12px; display: none; place-items: center; box-shadow: var(--shadow); }
+  .top .refresh svg { width: 20px; height: 20px; }
+  .live .top .refresh { display: grid; }
+  .top .refresh.spin svg { animation: spin .8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .livedot { width: 8px; height: 8px; border-radius: 50%; background: var(--ok); box-shadow: 0 0 0 3px color-mix(in srgb, var(--ok) 25%, transparent); display: none; }
+  .live .livedot { display: inline-block; }
+  .busy { position: fixed; inset: 0; z-index: 30; background: rgba(0, 0, 0, .18); display: none; place-items: center; }
+  .busy.on { display: grid; }
+  .busy div { background: var(--card); border-radius: 16px; padding: 18px 22px; display: flex; gap: 12px; align-items: center; box-shadow: 0 10px 30px rgba(0, 0, 0, .2); font-weight: 600; }
+  .busy svg { width: 22px; height: 22px; color: var(--accent); animation: spin .8s linear infinite; }
+  .linkbox { background: var(--bg); border-radius: 12px; padding: 10px 12px; font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 13px; overflow-wrap: anywhere; user-select: all; }
   .page-title { margin: 6px 2px 12px; font-size: 24px; font-weight: 750; letter-spacing: -.02em; }
 
   /* Kartochkalar */
@@ -220,7 +232,8 @@
 <main id="main">
   <header class="top">
     <div class="logo"><svg viewBox="0 0 24 24" class="i"><path d="M21 8 12 3 3 8v8l9 5 9-5z"/><path d="M3 8l9 5 9-5M12 13v8"/></svg></div>
-    <div><h1>Boshqaruv paneli</h1><p id="sub">Material Hisobot</p></div>
+    <div style="min-width:0"><h1>Boshqaruv paneli</h1><p><span class="livedot"></span><span id="sub">Material Hisobot</span></p></div>
+    <button class="refresh" id="refresh" aria-label="Yangilash"><svg viewBox="0 0 24 24" class="i"><path d="M21 12a9 9 0 1 1-2.64-6.36L21 8"/><path d="M21 3v5h-5"/></svg></button>
   </header>
   <div id="view"></div>
 </main>
@@ -229,11 +242,12 @@
 <div class="sheet-bg" id="sheetbg"></div>
 <div class="sheet" id="sheet"><div class="grip"></div><div id="sheetbody"></div></div>
 <div class="toast" id="toast"></div>
+<div class="busy" id="busy"><div><svg viewBox="0 0 24 24" class="i"><path d="M21 12a9 9 0 1 1-6.22-8.56"/></svg>Bajarilmoqda…</div></div>
 
 <script>
 (function () {
   'use strict';
-  var S = {"v":2,"roles":{"owner":"👑 Super admin","user":"👤 Buxgalter","client":"🏢 Firma egasi"},"sections":{"ombor":"🏭 Ombor","tovar":"📦 Tovar kartochkasi","minus":"❓ Minus va 🧮 kalkulyatsiya","hujjat":"🧾 Hujjatlar","audit":"🩺 Audit","sozlama":"⚙️ Sozlamalar"},"toggles":{"search":["Tovar qidirish","ombor"],"tekshir":["Minusni tekshirish","ombor"],"manfiyxls":["Manfiy","ombor"],"hammaxls":["Hamma tovar (Excel)","ombor"],"qoldiq":["Qoldiq kiritish","ombor"],"kalk":["Kalkulyatsiya / akt","ombor"],"kassa":["Kassa savdosi","ombor"],"tarixin":["Qayerdan kelgan","tovar"],"tarixout":["Qayerga ketgan","tovar"],"tarixall":["Tovar tarixi","tovar"],"loadold":["Eski yil hujjatlarini yuklash","tovar"],"fixall":["Hammasini to‘g‘rilash","minus"],"negxls":["Tekshirilmaganlar (Excel)","minus"],"kalkxls":["Kalkulyatsiya fayli (Excel)","minus"],"aktxls":["Akt spisaniya (Excel)","minus"],"shartnoma":["Shartnomalar","hujjat"],"filtr":["Kontragent, tur, davr","hujjat"],"docpdf":["Hujjat PDF","hujjat"],"docxls":["Hujjat Excel","hujjat"],"alerts":["Xatolar","audit"],"events":["Oxirgi amallar","audit"],"realtime":["Real vaqt va xabarlar","sozlama"],"merge":["Tovar birlashtirish","sozlama"],"manualxls":["Amallar (Excel)","sozlama"],"docsfolder":["Hujjatlar papkasi","sozlama"]},"profiles":{"savdo":"Savdo","ishlab_chiqarish":"Ishlab chiqarish","qurilish":"Qurilish","xizmat":"Xizmat ko‘rsatish","ovqatlanish":"Umumiy ovqatlanish"},"poll":[0,2,5,10,15,30],"interval":[0,1,3,6,12,24],"digest":[null,"08:00","09:00","12:00","18:00","20:00"],"msgMax":3500};
+  var S = {"v":2,"live":false,"roles":{"owner":"👑 Super admin","user":"👤 Buxgalter","client":"🏢 Firma egasi"},"sections":{"ombor":"🏭 Ombor","tovar":"📦 Tovar kartochkasi","minus":"❓ Minus va 🧮 kalkulyatsiya","hujjat":"🧾 Hujjatlar","audit":"🩺 Audit","sozlama":"⚙️ Sozlamalar"},"toggles":{"search":["Tovar qidirish","ombor"],"tekshir":["Minusni tekshirish","ombor"],"manfiyxls":["Manfiy","ombor"],"hammaxls":["Hamma tovar (Excel)","ombor"],"qoldiq":["Qoldiq kiritish","ombor"],"kalk":["Kalkulyatsiya / akt","ombor"],"kassa":["Kassa savdosi","ombor"],"tarixin":["Qayerdan kelgan","tovar"],"tarixout":["Qayerga ketgan","tovar"],"tarixall":["Tovar tarixi","tovar"],"loadold":["Eski yil hujjatlarini yuklash","tovar"],"fixall":["Hammasini to‘g‘rilash","minus"],"negxls":["Tekshirilmaganlar (Excel)","minus"],"kalkxls":["Kalkulyatsiya fayli (Excel)","minus"],"aktxls":["Akt spisaniya (Excel)","minus"],"shartnoma":["Shartnomalar","hujjat"],"filtr":["Kontragent, tur, davr","hujjat"],"docpdf":["Hujjat PDF","hujjat"],"docxls":["Hujjat Excel","hujjat"],"alerts":["Xatolar","audit"],"events":["Oxirgi amallar","audit"],"realtime":["Real vaqt va xabarlar","sozlama"],"merge":["Tovar birlashtirish","sozlama"],"manualxls":["Amallar (Excel)","sozlama"],"docsfolder":["Hujjatlar papkasi","sozlama"]},"profiles":{"savdo":"Savdo","ishlab_chiqarish":"Ishlab chiqarish","qurilish":"Qurilish","xizmat":"Xizmat ko‘rsatish","ovqatlanish":"Umumiy ovqatlanish"},"poll":[0,2,5,10,15,30],"interval":[0,1,3,6,12,24],"digest":[null,"08:00","09:00","12:00","18:00","20:00"],"msgMax":3500};
   var tg = window.Telegram && window.Telegram.WebApp;
   var inTg = Boolean(tg && tg.platform && tg.platform !== 'unknown');
   var D = null;          // bot yuborgan holat surati
@@ -304,6 +318,7 @@
   function haptic(kind) { try { if (kind === 'ok') tg.HapticFeedback.notificationOccurred('success'); else if (kind === 'err') tg.HapticFeedback.notificationOccurred('error'); else if (kind === 'warn') tg.HapticFeedback.notificationOccurred('warning'); else tg.HapticFeedback.selectionChanged(); } catch (e) {} }
   var toastTimer;
   function toast(t) { var el = $('toast'); el.textContent = t; el.style.display = 'block'; clearTimeout(toastTimer); toastTimer = setTimeout(function () { el.style.display = 'none'; }, 2400); }
+  function closes() { return S.live ? '' : ' Panel yopiladi, natija chatga keladi.'; }
   function confirmBox(text, fn) { if (inTg && tg.showConfirm) tg.showConfirm(text, function (ok) { if (ok) fn(); }); else if (window.confirm(text)) fn(); }
   function openLink(url) { if (!url) return; if (inTg && tg.openLink) tg.openLink(url); else window.open(url, '_blank'); }
   function firm(tin) { return (D.firms || []).find(function (x) { return x.t === tin; }); }
@@ -323,7 +338,16 @@
 
   // ───────── holat suratini o'qish ─────────
   function b64(s) { s = s.replace(/-/g, '+').replace(/_/g, '/'); while (s.length % 4) s += '='; var bin = atob(s); var out = new Uint8Array(bin.length); for (var i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i); return out; }
+  // Jonli rejim: botning o'z serveri. Kirish — Telegram imzosi (initData), har so'rovda
+  function api(method, path, body) {
+    var init = (tg && tg.initData) || '';
+    if (!init) return Promise.reject(new Error('noinit'));
+    return fetch(path, { method: method, headers: { 'Authorization': 'tma ' + init, 'Content-Type': 'application/json' }, body: body ? JSON.stringify(body) : undefined })
+      .then(function (r) { return r.json().catch(function () { return { ok: false, error: 'Server javob bermadi' }; }); })
+      .then(function (j) { if (!j.ok) throw new Error(j.error || 'Xato'); return j; });
+  }
   function load() {
+    if (S.live) return api('GET', '/api/state').then(function (j) { return j.state; });
     var m = /[#&?]d=([A-Za-z0-9_-]+)/.exec(window.__HREF || location.href);
     if (!m) return Promise.reject(new Error('nodata'));
     if (!window.DecompressionStream) return Promise.reject(new Error('old'));
@@ -354,6 +378,7 @@
 
   // ───────── o'zgarishlar ─────────
   function queue(key, action, label) {
+    if (S.live) { if (action) run([action]); return; }
     Q = Q.filter(function (x) { return x.key !== key; });
     if (action) Q.push({ key: key, a: action, label: label });
     haptic();
@@ -364,6 +389,7 @@
   function payload(extra) { return JSON.stringify({ t: 'admin', v: S.v, at: D && D.at, a: Q.map(function (x) { return x.a; }).concat(extra || []) }); }
   function renderPending() {
     var n = Q.length;
+    if (S.live) { $('pending').classList.remove('show'); return; }
     // Telegram'da saqlash — uning asosiy tugmasi (pastda); bu belgi — ro'yxatni ko'rish uchun
     $('pending').classList.toggle('show', n > 0);
     $('psave').style.display = inTg ? 'none' : '';
@@ -381,6 +407,7 @@
   // Saqlash: o'zgarishlar botga ketadi (Telegram oynani yopadi), bot natijani xabar qilib yozadi.
   // `extra` — darhol bajariladigan amal (xabar yuborish, yangilash, taklif havolasi)
   function submit(extra) {
+    if (S.live) return run(Q.map(function (x) { return x.a; }).concat(extra || []));
     var data = payload(extra);
     if (new TextEncoder().encode(data).length > 4096) { haptic('err'); return toast('Juda ko‘p o‘zgarish — bir qismini olib tashlang'); }
     if (!inTg) { toast('Saqlash faqat Telegram ichida ishlaydi'); return; }
@@ -388,6 +415,48 @@
     try { tg.disableClosingConfirmation(); } catch (e) {}
     tg.sendData(data);
   }
+  var reopen = null; // ochiq oyna — yangi ma'lumot bilan qayta chiziladi
+  function setData(data) {
+    D = data;
+    D.set = D.set || {}; D.off = D.off || []; D.firms = D.firms || []; D.users = D.users || []; D.guests = D.guests || []; D.inv = D.inv || []; D.log = D.log || [];
+    $('sub').textContent = S.live ? 'Jonli · ' + dt(D.at).slice(-5) + ' da yangilandi' : (D.bot && D.bot.u ? '@' + D.bot.u + ' · ' : '') + dt(D.at) + ' holatiga';
+  }
+  function run(actions) {
+    if (!actions.length) return Promise.resolve();
+    $('busy').classList.add('on');
+    return api('POST', '/api/act', { a: actions }).then(function (j) {
+      setData(j.state);
+      render();
+      if (reopen && $('sheet').classList.contains('open')) reopen();
+      if (j.invites && j.invites.length) return inviteResult(j.invites);
+      if (j.failed && j.failed.length) { haptic('err'); return toast('❗ ' + j.failed[0]); }
+      haptic('ok');
+      toast(j.syncing ? 'Yangilash boshlandi — natija chatga keladi' : '✓ ' + (j.done[0] || 'Bajarildi') + (j.done.length > 1 ? ' (+' + (j.done.length - 1) + ')' : ''));
+    }).catch(function (e) { haptic('err'); toast('❗ ' + e.message); })
+      .then(function () { $('busy').classList.remove('on'); });
+  }
+  function refreshLive(quiet) {
+    if (!S.live) return;
+    $('refresh').classList.add('spin');
+    return load().then(function (data) {
+      setData(data); render();
+      if (reopen && $('sheet').classList.contains('open')) reopen();
+      if (!quiet) toast('Yangilandi');
+    }).catch(function (e) { if (!quiet) toast('❗ ' + e.message); })
+      .then(function () { $('refresh').classList.remove('spin'); });
+  }
+  function inviteResult(list) {
+    var h = sheetHead('Taklif havolasi tayyor', '24 soat, bir marta ishlaydi', 'link', 'c-green');
+    list.forEach(function (x, i) {
+      h += '<div class="card"><h2>' + esc(x.whom) + '</h2><div class="linkbox">' + esc(x.link) + '</div>' +
+        '<div class="btns"><button class="btn primary" data-share="' + i + '">' + ic('send') + 'Ulashish</button><button class="btn" data-copy="' + i + '">Nusxa olish</button></div></div>';
+    });
+    h += '<p class="hint">Havolani kerakli odamga yuboring — u ochganda botga taklifdagi rol bilan kiradi.</p>';
+    lastInvites = list;
+    reopen = null;
+    openSheet(h);
+  }
+  var lastInvites = [];
   function pendingSheet() {
     var h = sheetHead('Saqlanmagan o‘zgarishlar', Q.length + ' ta', 'list', 'c-orange');
     h += '<div class="card"><div class="list">' + Q.map(function (x) {
@@ -463,7 +532,7 @@
     h += '<div class="card"><h2>' + ic('clock') + 'So‘nggi amallar' + (log.length ? '<button class="more" data-journal="1">Jurnal</button>' : '') + '</h2>';
     h += log.length ? '<div class="list">' + log.map(logRow).join('') + '</div>' : '<div class="hint" style="margin:0">Hali amal bajarilmagan. Paneldan qilingan har bir o‘zgarish shu yerda qayd etiladi.</div>';
     h += '</div>';
-    h += '<p class="hint">Ma’lumot ' + dt(D.at) + ' holatiga. Yangilash uchun panelni botdan qayta oching.</p>';
+    h += '<p class="hint">' + (S.live ? 'Jonli ulanish — ma’lumot o‘zi yangilanib turadi, amallar darhol bajariladi.' : 'Ma’lumot ' + dt(D.at) + ' holatiga. Yangilash uchun panelni botdan qayta oching.') + '</p>';
     return h;
   }
   function kpi(icon, color, value, label, target) { return '<button class="kpi" data-tab="' + target + '"><div class="ico ' + color + '">' + ic(icon) + '</div><b>' + esc(value) + '</b><span>' + esc(label) + '</span></button>'; }
@@ -500,6 +569,7 @@
     return h;
   }
   function firmSheet(tin) {
+    reopen = function () { firmSheet(tin); };
     var f = firm(tin);
     if (!f) return;
     var st = stateOf(f), iss = issuesOf(f);
@@ -588,6 +658,7 @@
 
   var editing = null;
   function userSheet(id) {
+    reopen = function () { userSheet(id); };
     var u = (D.users || []).find(function (x) { return String(x.id) === String(id); });
     if (!u) return;
     var rq = queued('role:' + u.id), fq = queued('firms:' + u.id), bq = queued('block:' + u.id);
@@ -612,6 +683,7 @@
     openSheet(h);
   }
   function guestSheet(id) {
+    reopen = null;
     var g = (D.guests || []).find(function (x) { return String(x.id) === String(id); });
     if (!g) return;
     var h = sheetHead(g.n || 'Ismsiz', 'Qiziqqan · botni ochgan', null, null, ava(g.n, g.id));
@@ -626,13 +698,14 @@
   }
   var inv = { role: 'user' };
   function inviteSheet() {
+    reopen = null;
     var h = sheetHead('Yangi odam taklif qilish', 'Bir martalik havola · 24 soat', 'userplus', 'c-green');
     h += '<div class="card"><h2>Rol</h2><div class="seg"><button data-irole="user" class="' + (inv.role === 'user' ? 'on' : '') + '">👤 Buxgalter</button>' +
       '<button data-irole="client" class="' + (inv.role === 'client' ? 'on' : '') + '"' + ((D.firms || []).length ? '' : ' disabled') + '>🏢 Firma egasi</button></div>';
     if (inv.role === 'user') h += '<div style="color:var(--hint);font-size:13px;margin-bottom:4px">Qaysi tashkilotlarni ko‘radi:</div>' + firmChecks([], true);
     else h += '<div style="color:var(--hint);font-size:13px;margin-bottom:8px">Qaysi tashkilot egasi (faqat shuni ko‘radi):</div>' + firmSelect('iclient', ((D.firms || [])[0] || {}).t);
     h += '<div class="btns"><button class="btn primary" data-icreate="1">' + ic('link') + 'Havola yaratish</button></div></div>';
-    h += '<p class="hint">Bot havolani chatga yuboradi — uni kerakli odamga jo‘nating.' + (Q.length ? ' Saqlanmagan ' + Q.length + ' ta o‘zgarish ham birga saqlanadi.' : '') + '</p>';
+    h += '<p class="hint">' + (S.live ? 'Havola shu yerda chiqadi — uni ulashing yoki nusxa oling.' : 'Bot havolani chatga yuboradi — uni kerakli odamga jo‘nating.' + (Q.length ? ' Saqlanmagan ' + Q.length + ' ta o‘zgarish ham birga saqlanadi.' : '')) + '</p>';
     openSheet(h);
   }
   function firmChecks(selected, all) {
@@ -751,6 +824,7 @@
     if (inTg) try { tg.BackButton.show(); } catch (e) {}
   }
   function closeSheet() {
+    reopen = null;
     $('sheet').classList.remove('open');
     $('sheetbg').classList.remove('open');
     if (inTg) try { tg.BackButton.hide(); } catch (e) {}
@@ -759,10 +833,21 @@
 
   // ───────── bosishlar ─────────
   document.addEventListener('click', function (e) {
-    var t = e.target.closest('[data-tab],[data-quick],[data-firm],[data-sync],[data-freeze],[data-ff],[data-pv],[data-rf],[data-people],[data-user],[data-guest],[data-revoke],[data-unq],[data-submit],[data-clearq],[data-bc],[data-bcsend],[data-set],[data-demosave],[data-urole],[data-uapply],[data-umsg],[data-block],[data-del],[data-irole],[data-icreate],[data-open],[data-close],[data-journal]');
+    var t = e.target.closest('[data-share],[data-copy],[data-tab],[data-quick],[data-firm],[data-sync],[data-freeze],[data-ff],[data-pv],[data-rf],[data-people],[data-user],[data-guest],[data-revoke],[data-unq],[data-submit],[data-clearq],[data-bc],[data-bcsend],[data-set],[data-demosave],[data-urole],[data-uapply],[data-umsg],[data-block],[data-del],[data-irole],[data-icreate],[data-open],[data-close],[data-journal]');
     if (!t) return;
     var a = function (n) { return t.getAttribute(n); };
     if (a('data-close')) return closeSheet();
+    if (a('data-share')) {
+      var inv1 = lastInvites[Number(a('data-share'))];
+      var shareUrl = 'https://t.me/share/url?url=' + encodeURIComponent(inv1.link) + '&text=' + encodeURIComponent('Material Hisobot botiga taklif');
+      if (inTg && tg.openTelegramLink) tg.openTelegramLink(shareUrl); else window.open(shareUrl, '_blank');
+      return;
+    }
+    if (a('data-copy')) {
+      var inv2 = lastInvites[Number(a('data-copy'))];
+      (navigator.clipboard ? navigator.clipboard.writeText(inv2.link) : Promise.reject()).then(function () { haptic('ok'); toast('Nusxa olindi'); }, function () { toast('Havolani bosib turib nusxa oling'); });
+      return;
+    }
     if (a('data-open')) { e.preventDefault(); return openLink(a('data-open')); }
     if (a('data-tab')) { closeSheet(); return go(a('data-tab')); }
     if (a('data-journal')) { go('set'); setTimeout(function () { window.scrollTo(0, document.body.scrollHeight); }, 50); return; }
@@ -771,10 +856,10 @@
       var qk = a('data-quick');
       if (qk === 'gomsg') return go('msg');
       if (qk === 'invite') { inv = { role: 'user' }; return inviteSheet(); }
-      if (qk === 'syncall') return confirmBox('Hamma tashkilot Didox’dan yangilansinmi? Panel yopiladi, natija chatga keladi.', function () { submit([['sync', 'all']]); });
+      if (qk === 'syncall') return confirmBox('Hamma tashkilot Didox’dan yangilansinmi?' + closes(), function () { submit([['sync', 'all']]); });
     }
     if (a('data-firm')) return firmSheet(a('data-firm'));
-    if (a('data-sync')) { var st = a('data-sync'); return confirmBox(firmName(st) + ' hozir yangilansinmi? Panel yopiladi, natija chatga keladi.', function () { submit([['sync', st]]); }); }
+    if (a('data-sync')) { var st = a('data-sync'); return confirmBox(firmName(st) + ' hozir yangilansinmi?' + closes(), function () { submit([['sync', st]]); }); }
     if (a('data-freeze')) {
       var ft = a('data-freeze'), on = a('data-on') === '1', f = firm(ft);
       if (Boolean(f.fz) === on) queue('freeze:' + ft, null); else queue('freeze:' + ft, ['freeze', ft, on], (on ? 'Muzlatish: ' : 'Muzlatishdan chiqarish: ') + firmName(ft));
@@ -808,7 +893,7 @@
     if (a('data-bcsend')) {
       var text = $('bctext').value.trim(), n = audience()[ui.bcTo];
       if (!text) { haptic('err'); return toast('Xabar matnini yozing'); }
-      return confirmBox(n + ' kishiga xabar yuborilsinmi?', function () { submit([['bc', ui.bcTo, text]]); });
+      return confirmBox(n + ' kishiga xabar yuborilsinmi?', function () { submit([['bc', ui.bcTo, text]]); if (S.live) ui.bcText = ''; });
     }
     if (a('data-set')) {
       var sk = a('data-set'), v = JSON.parse(a('data-v'));
@@ -819,7 +904,7 @@
       var dv = $('demobot').value.trim();
       if (dv && !/^(?:https?:\/\/)?(?:t(?:elegram)?\.me\/)?@?[A-Za-z][A-Za-z0-9_]{3,31}\/?$/.test(dv)) { haptic('err'); return toast('Masalan: @material_demo_bot'); }
       if ((D.set.demoBot || '') === dv) queue('set:demoBot', null); else queue('set:demoBot', ['set', 'demoBot', dv], 'Demo bot: ' + (dv || 'olib tashlanadi'));
-      toast('O‘zgarish qo‘shildi — «Saqlash» bosing'); return refresh();
+      if (!S.live) toast('O‘zgarish qo‘shildi — «Saqlash» bosing'); return refresh();
     }
     if (a('data-urole')) {
       editing.role = a('data-urole');
@@ -840,12 +925,12 @@
         var same = u.r === 'user' && JSON.stringify(u.fs ? u.fs.slice().sort() : null) === JSON.stringify(list ? list.slice().sort() : null);
         if (!same) queue('firms:' + uid, ['firms', uid, list], userName(u) + ' ko‘radi: ' + (list ? list.map(firmName).join(', ') : 'hamma tashkilot'));
       }
-      closeSheet(); toast(Q.length ? 'O‘zgarish qo‘shildi — «Saqlash» bosing' : 'O‘zgarish yo‘q'); return refresh();
+      closeSheet(); if (!S.live) toast(Q.length ? 'O‘zgarish qo‘shildi — «Saqlash» bosing' : 'O‘zgarish yo‘q'); return refresh();
     }
     if (a('data-umsg')) {
       var mid = a('data-umsg'), mt = $('umsg').value.trim();
       if (!mt) { haptic('err'); return toast('Xabar matnini yozing'); }
-      return confirmBox(a('data-name') + ' ga xabar yuborilsinmi?', function () { submit([['msg', mid, mt]]); });
+      return confirmBox(a('data-name') + ' ga xabar yuborilsinmi?', function () { submit([['msg', mid, mt]]); if (S.live) closeSheet(); });
     }
     if (a('data-block')) {
       var bid = a('data-block'), bon = a('data-on') === '1', bu = D.users.find(function (x) { return String(x.id) === bid; });
@@ -898,15 +983,22 @@
   } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
     document.documentElement.classList.add('tg-dark');
   }
+  if (S.live) {
+    document.documentElement.classList.add('live');
+    $('refresh').addEventListener('click', function () { haptic(); refreshLive(false); });
+    // Har 45 soniyada (oyna ko'rinib turganda va ochiq oyna/yozuv bo'lmaganda) yangi holat
+    setInterval(function () {
+      if (document.hidden || $('sheet').classList.contains('open') || (document.activeElement && /INPUT|TEXTAREA/.test(document.activeElement.tagName))) return;
+      refreshLive(true);
+    }, 45000);
+  }
   load().then(function (data) {
     if (!data || data.v !== S.v) throw new Error('version');
-    D = data;
-    D.set = D.set || {}; D.off = D.off || []; D.firms = D.firms || []; D.users = D.users || []; D.guests = D.guests || []; D.inv = D.inv || []; D.log = D.log || [];
-    $('sub').textContent = (D.bot && D.bot.u ? '@' + D.bot.u + ' · ' : '') + dt(D.at) + ' holatiga';
+    setData(data);
     render();
     renderPending();
   }).catch(function (e) {
-    var why = { nodata: 'Panel ma’lumotsiz ochildi. Botda /start bosing va «👑 Admin panel» tugmasini tanlang.', old: 'Telegram ilovangiz eski — iltimos, yangilang.', version: 'Panel yangilangan. Botda /start bosib, panelni qayta oching.' }[e && e.message] || 'Ma’lumotni o‘qib bo‘lmadi. Botda /start bosib, panelni qayta oching.';
+    var why = { nodata: 'Panel ma’lumotsiz ochildi. Botda /start bosing va «👑 Admin panel» tugmasini tanlang.', noinit: 'Panelni bot ichidagi «👑 Admin panel» yoki «Admin» tugmasidan oching.', old: 'Telegram ilovangiz eski — iltimos, yangilang.', version: 'Panel yangilangan. Botda /start bosib, panelni qayta oching.' }[e && e.message] || (S.live ? e.message : 'Ma’lumotni o‘qib bo‘lmadi. Botda /start bosib, panelni qayta oching.');
     $('tabbar').style.display = 'none';
     $('view').innerHTML = '<div class="fatal"><div class="card">' + ic('lock') + '<p>' + esc(why) + '</p></div></div>';
   });
