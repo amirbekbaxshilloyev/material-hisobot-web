@@ -223,6 +223,9 @@
   .issue { display: flex; gap: 10px; align-items: center; padding: 9px 0; border-top: 1px solid var(--line); font-size: 14px; }
   .issue:first-child { border-top: 0; padding-top: 0; }
   .toast { position: fixed; left: 50%; top: 14px; transform: translateX(-50%); z-index: 20; background: rgba(17, 24, 39, .92); color: #fff; padding: 9px 16px; border-radius: 12px; font-size: 14px; display: none; max-width: 90vw; text-align: center; box-shadow: 0 6px 18px rgba(0, 0, 0, .2); }
+  .seg.tight button { font-size: 12.5px; padding: 7px 2px; }
+  .spinner { width: 28px !important; height: 28px !important; color: var(--accent); opacity: 1 !important; animation: spin .8s linear infinite; }
+  .logline { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 12.5px; line-height: 1.4; overflow-wrap: anywhere; }
   .fatal { margin-top: 40px; }
   .fatal .card { text-align: center; padding: 28px 20px; }
   .fatal svg { width: 40px; height: 40px; color: var(--hint); }
@@ -253,7 +256,7 @@
   var D = null;          // bot yuborgan holat surati
   var Q = [];            // saqlanmagan o'zgarishlar: { key, a, label }
   var tab = 'home';
-  var ui = { firmFilter: 'all', firmQ: '', peopleView: 'users', roleFilter: 'all', peopleQ: '', bcTo: 'all', bcText: '' };
+  var ui = { firmFilter: 'all', firmQ: '', peopleView: 'users', roleFilter: 'all', peopleQ: '', bcTo: 'all', bcText: '', fsec: 'over', ddir: 'all', docQ: '', negF: 'all', logF: 'err' };
   var $ = function (id) { return document.getElementById(id); };
 
   // ───────── belgilar (SVG) ─────────
@@ -492,7 +495,7 @@
     var warns = [];
     if (!sys.tok && !D.demo) warns.push(['bad', 'key', 'Didox partner tokeni yozilmagan', 'Botda: Sozlamalar → Tizim holati → Partner tokeni']);
     if (lic.st === 'expired') warns.push(['bad', 'shield', 'Obuna muddati tugagan', 'Didox’dan yangilash to‘xtagan. Uzaytirish uchun sotuvchiga murojaat qiling.']);
-    else if (lic.st === 'grace' || lic.st === 'expiring') warns.push(['warn', 'shield', 'Obuna tugayapti', (lic.until ? lic.until + ' gacha' : '') + (lic.left != null ? ' · ' + lic.left + ' kun qoldi' : '')]);
+    else if (lic.st === 'grace' || lic.st === 'expiring') warns.push(['warn', 'shield', 'Obuna tugayapti', (lic.until ? day(lic.until) + ' gacha' : '') + (lic.left != null ? ' · ' + lic.left + ' kun qoldi' : '')]);
     if (bad.length) warns.push(['bad', 'alert', bad.length + ' ta tashkilotda muammo', bad.map(function (f) { return f.n; }).join(', ')]);
     var h = '';
     if (!warns.length) h += '<div class="banner ok"><div class="ico">' + ic('check') + '</div><div><b>Hammasi joyida</b><span>Tizim ishlayapti · oxirgi yangilanish ' + ago(sys.quick || sys.full) + '</span></div></div>';
@@ -568,19 +571,71 @@
     h += '<p class="hint">Tashkilot qo‘shish va o‘chirish — botning o‘zida: Bosh sahifa → Sozlamalar.</p>';
     return h;
   }
-  function firmSheet(tin) {
-    reopen = function () { firmSheet(tin); };
+  // Tashkilot tafsiloti (jonli rejim): so'ralganda serverdan, 60 soniya keshda
+  var FD = {};
+  var MONTHS = ['Yanvar', 'Fevral', 'Mart', 'Aprel', 'May', 'Iyun', 'Iyul', 'Avgust', 'Sentabr', 'Oktabr', 'Noyabr', 'Dekabr'];
+  function monthName(ym) { var p = String(ym || '').split('-'); return p.length === 2 ? MONTHS[Number(p[1]) - 1] + ' ' + p[0] : ym; }
+  function day(iso) { if (!iso) return '—'; var p = String(iso).slice(0, 10).split('-'); return p.length === 3 ? p[2] + '.' + p[1] + '.' + p[0] : iso; }
+  function qty(n, u) { n = Number(n) || 0; var s = Math.abs(n) >= 1000 ? money(n) : String(Math.round(n * 1000) / 1000).replace('-', '−'); return s + (u ? ' ' + esc(u) : ''); }
+  function docState(st) {
+    return ({ 3: ['ok', 'Imzolangan'], 1: ['warn', 'Kontragent imzosi'], 2: ['warn', 'Imzo kutmoqda'], 60: ['warn', 'Agent imzosi'], 4: ['bad', 'Rad etilgan'], 40: ['bad', 'Haqiqiy emas'], 50: ['bad', 'Bekor qilingan'], 5: ['gray', 'O‘chirilgan'], 55: ['gray', 'O‘chirilgan'], 0: ['gray', 'Qoralama'] })[st] || ['gray', '—'];
+  }
+  function loadFirm(tin, force) {
+    var c = FD[tin];
+    if (!force && c && Date.now() - c.at < 60000) return Promise.resolve(c.d);
+    return api('GET', '/api/firm?tin=' + encodeURIComponent(tin)).then(function (j) { FD[tin] = { d: j.firm, at: Date.now() }; return j.firm; });
+  }
+  var openFirm = null;
+  function firmSheet(tin, keepScroll) {
+    reopen = function () { delete FD[tin]; firmSheet(tin, true); };
+    openFirm = tin;
     var f = firm(tin);
     if (!f) return;
+    var sec = S.live ? ui.fsec || 'over' : 'over';
+    var head = sheetHead(f.n, 'INN ' + f.t, null, null, '<div class="sq ' + (f.fz ? 'c-gray' : 'c-blue') + '">' + initial(f.n) + '</div>');
+    if (S.live) {
+      head += '<div class="seg tight">' + [['over', 'Umumiy'], ['docs', 'Hujjatlar'], ['stock', 'Ombor'], ['kassa', 'Kassa'], ['ev', 'Voqealar']].map(function (x) {
+        return '<button data-fsec="' + x[0] + '" class="' + (sec === x[0] ? 'on' : '') + '">' + x[1] + '</button>';
+      }).join('') + '</div>';
+    }
+    var c = FD[tin];
+    var fd = c && c.d;
+    if (S.live && (!c || Date.now() - c.at > 60000)) {
+      loadFirm(tin).then(function () { if (openFirm === tin && $('sheet').classList.contains('open')) firmSheet(tin, true); })
+        .catch(function (e) { if (openFirm === tin && sec !== 'over') openSheet(head + '<div class="card empty">' + ic('alert') + '<div>' + esc(e.message) + '</div></div>', true); });
+    }
+    if (sec !== 'over' && !fd) return openSheet(head + loadingCard(), keepScroll);
+    var body = { over: firmOverview, docs: firmDocs, stock: firmStock, kassa: firmKassa, ev: firmEvents }[sec](f, fd);
+    openSheet(head + body, keepScroll);
+    // Bo'limlar almashganda oyna balandligi sakramasin
+    if (S.live) $('sheet').style.minHeight = '82vh';
+  }
+  function loadingCard() { return '<div class="card empty"><svg viewBox="0 0 24 24" class="i spinner"><path d="M21 12a9 9 0 1 1-6.22-8.56"/></svg><div>Yuklanmoqda…</div></div>'; }
+  function firmOverview(f, fd) {
+    var tin = f.t;
     var st = stateOf(f), iss = issuesOf(f);
     var fz = queued('freeze:' + tin) ? queued('freeze:' + tin).a[2] : f.fz;
     var people = (D.users || []).filter(function (u) { return seesFirm(u, tin); });
-    var h = sheetHead(f.n, 'INN ' + f.t, null, null, '<div class="sq ' + (f.fz ? 'c-gray' : 'c-blue') + '">' + initial(f.n) + '</div>');
-    h += '<div class="card"><div class="stats">' +
+    var h = '<div class="card"><div class="stats">' +
       '<div><b>' + money(f.s) + '</b><span>Ombor qiymati, so‘m</span></div>' +
       '<div><b style="color:' + (f.ng ? 'var(--danger)' : 'inherit') + '">' + (f.ng || 0) + '</b><span>Manfiy qoldiq</span></div>' +
       '<div><b>' + (f.un || 0) + '</b><span>Tekshirilmagan minus</span></div>' +
       '<div><b>' + (f.pd || 0) + '</b><span>Imzo kutmoqda</span></div></div></div>';
+    if (fd) {
+      var s = fd.sum || {};
+      h += '<div class="card"><h2>' + ic('pulse') + 'Shu oy · ' + day(fd.per.from) + ' – ' + day(fd.per.to) + '</h2><div class="stats">' +
+        '<div><b>' + short(s.in) + '</b><span>Kirim, so‘m</span></div>' +
+        '<div><b>' + short(s.out) + '</b><span>Chiqim (tannarx), so‘m</span></div>' +
+        '<div><b>' + short(s.rev) + '</b><span>Tushum, so‘m</span></div>' +
+        '<div><b>' + (s.stock || 0) + ' / ' + (s.items || 0) + '</b><span>Qoldig‘i bor / jami tovar</span></div></div></div>';
+      [['in', 'Ko‘p olingan joylar', 'Kimdan'], ['out', 'Ko‘p sotilgan joylar', 'Kimga']].forEach(function (x) {
+        var list = (fd.top || {})[x[0]] || [];
+        if (!list.length) return;
+        h += '<div class="card"><h2>' + ic(x[0] === 'in' ? 'box' : 'send') + x[1] + '</h2><div class="list">' + list.map(function (p) {
+          return '<div class="row flat"><div class="grow"><div class="t1">' + esc(p.n || p.t) + '</div><div class="t2">INN ' + esc(p.t) + ' · ' + (p.c || 0) + ' ta hujjat</div></div><b style="font-variant-numeric:tabular-nums">' + short(p.s) + '</b></div>';
+        }).join('') + '</div></div>';
+      });
+    }
     h += '<div class="card"><h2>Holat <span class="pill p-' + st[0] + '" style="margin-left:auto">' + st[1] + '</span></h2>';
     h += iss.length ? iss.map(function (x) { return '<div class="issue"><span class="dot d-' + x[0] + '"></span>' + esc(x[2]) + '</div>'; }).join('') : '<div class="issue"><span class="dot d-ok"></span>Muammo yo‘q</div>';
     h += '</div>';
@@ -595,8 +650,127 @@
     }).join('') + '</div></div>';
     h += '<div class="btns"><button class="btn primary" data-sync="' + f.t + '">' + ic('refresh') + 'Hozir yangilash</button>' +
       '<button class="btn' + (queued('freeze:' + tin) ? ' on' : '') + '" data-freeze="' + f.t + '" data-on="' + (fz ? 0 : 1) + '">' + ic(fz ? 'sun' : 'snow') + (fz ? 'Muzlatishdan chiqarish' : 'Muzlatish') + '</button></div>';
-    h += '<p class="hint">Muzlatilgan tashkilot Didox’dan yangilanmaydi va kunlik xabarga kirmaydi; ma’lumoti saqlanadi. Hisob sozlamalari (QQS, hisob boshi, faoliyat turi) — botda: tashkilot → Sozlamalar.</p>';
-    openSheet(h);
+    h += '<p class="hint">Muzlatilgan tashkilot Didox’dan yangilanmaydi va kunlik xabarga kirmaydi; ma’lumoti saqlanadi. Hisob sozlamalari (QQS, hisob boshi, faoliyat turi) — botda: tashkilot → Sozlamalar.' +
+      (S.live ? '' : ' Hujjatlar, minuslar va kassa — jonli rejimda («Admin» tugmasi).') + '</p>';
+    return h;
+  }
+  function docMatch(d) {
+    if (ui.ddir !== 'all' && d.k !== ui.ddir) return false;
+    var q = String(ui.docQ || '').toLowerCase().trim();
+    return !q || String(d.no || '').toLowerCase().indexOf(q) >= 0 || String(d.p || '').toLowerCase().indexOf(q) >= 0 || String(d.pt || '').indexOf(q) >= 0;
+  }
+  function docRows(fd) {
+    var list = (fd.docs || []).filter(docMatch);
+    if (!list.length) return '<div class="empty">' + ic('doc') + '<div>Hujjat topilmadi</div></div>';
+    return '<div class="list">' + list.slice(0, 120).map(function (d) {
+      var s = docState(d.st);
+      return '<button class="row" data-doc="' + esc(d.i) + '"><div class="sq ' + (d.k === 'in' ? 'c-green' : 'c-violet') + '">' + ic(d.k === 'in' ? 'box' : 'send') + '</div><div class="grow">' +
+        '<div class="t1">' + esc(d.p || 'Kontragent ko‘rsatilmagan') + '</div><div class="t2">№ ' + esc(d.no || '—') + ' · ' + day(d.d) + (d.ty === 'Hisob-faktura' ? '' : ' · ' + esc(d.ty)) + '</div></div>' +
+        '<div style="text-align:right;flex:0 0 auto"><div style="font-weight:650;font-variant-numeric:tabular-nums">' + short(d.s) + '</div><span class="pill p-' + s[0] + '">' + s[1] + '</span></div></button>';
+    }).join('') + '</div>' + (list.length > 120 ? '<div class="count">Ko‘rsatildi 120 / ' + list.length + ' — qidiruvni aniqlashtiring</div>' : '');
+  }
+  function firmDocs(f, fd) {
+    var docs = fd.docs || [];
+    var n = { all: docs.length, in: docs.filter(function (d) { return d.k === 'in'; }).length, out: docs.filter(function (d) { return d.k === 'out'; }).length };
+    var h = '<div class="chips" style="margin-bottom:10px">' + [['all', 'Hammasi'], ['in', 'Kiruvchi'], ['out', 'Chiquvchi']].map(function (x) {
+      return '<button data-ddir="' + x[0] + '" class="' + (ui.ddir === x[0] ? 'on' : '') + '">' + x[1] + ' · ' + n[x[0]] + '</button>';
+    }).join('') + '</div>';
+    h += '<div class="search">' + ic('search') + '<input type="search" id="docq" placeholder="Raqam, kontragent yoki INN" value="' + esc(ui.docQ || '') + '"></div>';
+    h += '<div class="card"><div id="doclist">' + docRows(fd) + '</div></div>';
+    h += '<p class="hint">Didox’dagi barcha hujjatlar, eng yangisi birinchi' + (fd.docTotal > docs.length ? ' (oxirgi ' + docs.length + ' tasi, jami ' + fd.docTotal + ')' : '') + '. Hujjat ustiga bosing — ichidagi tovarlar.</p>';
+    return h;
+  }
+  function firmStock(f, fd) {
+    var s = fd.sum || {};
+    var h = '<div class="card"><div class="stats">' +
+      '<div><b>' + money(s.close) + '</b><span>Ombor qiymati, so‘m</span></div>' +
+      '<div><b>' + (s.stock || 0) + '</b><span>Qoldig‘i bor tovar</span></div>' +
+      '<div><b>' + (s.low || 0) + '</b><span>Kam qolgan</span></div>' +
+      '<div><b>' + (s.ni || 0) + '</b><span>Tasdiqlanmagan tovar</span></div></div></div>';
+    var neg = (fd.neg || []).filter(function (x) { return ui.negF === 'all' || (ui.negF === 'c' ? x.c : !x.c); });
+    var nc = (fd.neg || []).filter(function (x) { return x.c; }).length;
+    h += '<div class="card"><h2>' + ic('alert') + 'Minusdagi tovarlar · ' + (fd.negTotal || 0) + '</h2>';
+    if ((fd.neg || []).length) {
+      h += '<div class="chips" style="margin-bottom:6px">' + [['all', 'Hammasi · ' + fd.neg.length], ['u', 'Tekshirilmagan · ' + (fd.neg.length - nc)], ['c', 'Rostan minus · ' + nc]].map(function (x) {
+        return '<button data-negf="' + x[0] + '" class="' + (ui.negF === x[0] ? 'on' : '') + '">' + x[1] + '</button>';
+      }).join('') + '</div>';
+      h += '<div class="list">' + neg.map(function (x) {
+        return '<div class="row flat"><div class="grow"><div class="t1">' + esc(x.n) + '</div><div class="t2">' + (x.d ? day(x.d) + ' dan beri' : '') + '</div></div>' +
+          '<div style="text-align:right;flex:0 0 auto"><div style="font-weight:650;color:var(--danger)">' + qty(x.q, x.u) + '</div><span class="pill ' + (x.c ? 'p-bad">Rostan minus' : 'p-warn">Tekshirilmagan') + '</span></div></div>';
+      }).join('') + '</div>';
+      if (fd.negTotal > fd.neg.length) h += '<div class="count">Ko‘rsatildi ' + fd.neg.length + ' / ' + fd.negTotal + '</div>';
+    } else h += '<div class="issue"><span class="dot d-ok"></span>Minusda tovar yo‘q</div>';
+    h += '</div>';
+    if ((fd.low || []).length) {
+      h += '<div class="card"><h2>' + ic('box') + 'Kam qolgan · ' + fd.low.length + '</h2><div class="list">' + fd.low.map(function (x) {
+        return '<div class="row flat"><div class="grow"><div class="t1">' + esc(x.n) + '</div><div class="t2">Eng kam: ' + qty(x.m, x.u) + '</div></div><b style="color:var(--warn)">' + qty(x.q, x.u) + '</b></div>';
+      }).join('') + '</div></div>';
+    }
+    h += '<p class="hint">Minusni hal qilish (boshqa nom bilan kirgan tovar, «rostan ham minus») — botda: tashkilot → Ombor → Minusni tekshirish.</p>';
+    return h;
+  }
+  function firmKassa(f, fd) {
+    var list = fd.kassa || [];
+    if (!list.length) return '<div class="card empty">' + ic('doc') + '<div>Bu tashkilot kassa (Online NKM) fayllarini hali yubormagan.</div></div><p class="hint">Kassa cheklari fayli botda yuboriladi: tashkilot → Ombor → Kassa savdosi.</p>';
+    var miss = list.filter(function (m) { return m.st === 'missing'; }).length;
+    var h = miss ? '<div class="banner warn"><div class="ico">' + ic('alert') + '</div><div><b>' + miss + ' oy uchun fayl kerak</b><span>Kassa cheklari fayli yuborilmagan oylar</span></div></div>' : '';
+    h += '<div class="card"><div class="list">' + list.map(function (m) {
+      var s = { submitted: ['ok', 'Topshirilgan'], missing: ['bad', 'Fayl kerak'], no_sales: ['gray', 'Savdo bo‘lmagan'], current: ['blue', 'Joriy oy'] }[m.st] || ['gray', m.st];
+      return '<div class="row flat"><div class="grow"><div class="t1">' + esc(monthName(m.m)) + '</div><div class="t2">' + (m.st === 'submitted' ? short(m.g) + ' so‘m · ' + (m.r || 0) + ' ta chek' : '&nbsp;') + '</div></div><span class="pill p-' + s[0] + '">' + s[1] + '</span></div>';
+    }).join('') + '</div></div>';
+    return h;
+  }
+  function firmEvents(f, fd) {
+    var list = fd.ev || [];
+    if (!list.length) return '<div class="card empty">' + ic('clock') + '<div>Hali voqea yo‘q</div></div>';
+    return '<div class="card"><div class="list">' + list.map(function (e) {
+      var bad = /error|xato|fail/i.test(e.ty || '') || /xato|❗/i.test(e.m || '');
+      return '<div class="row flat"><span class="dot d-' + (bad ? 'bad' : 'gray') + '"></span><div class="grow"><div style="font-size:14px;overflow-wrap:anywhere">' + esc(e.m) + '</div><div class="t2">' + dt(e.at) + '</div></div></div>';
+    }).join('') + '</div></div><p class="hint">Yangilanishlar, yuklangan fayllar, xatolar — shu tashkilot bazasidagi oxirgi 40 ta voqea.</p>';
+  }
+  function docSheet(tin, id) {
+    reopen = null;
+    openFirm = null;
+    var back = '<div class="btns" style="margin:0 0 12px"><button class="btn ghost" data-backfirm="' + esc(tin) + '" style="flex:0 0 auto;padding:6px 4px">‹ ' + esc(firmName(tin)) + '</button></div>';
+    openSheet(back + loadingCard());
+    api('GET', '/api/doc?tin=' + encodeURIComponent(tin) + '&id=' + encodeURIComponent(id)).then(function (j) {
+      var d = j.doc, s = docState(d.st);
+      var h = back + sheetHead(d.ty + ' № ' + (d.no || '—'), day(d.d) + ' · ' + (d.k === 'in' ? 'Kiruvchi' : 'Chiquvchi'), d.k === 'in' ? 'box' : 'send', d.k === 'in' ? 'c-green' : 'c-violet');
+      h += '<div class="card">' + kv('Kontragent', esc(d.p || '—')) + kv('INN', esc(d.pt || '—')) + (d.cn ? kv('Shartnoma', '№ ' + esc(d.cn)) : '') +
+        kv('Summa', money(d.s) + ' so‘m') + kv('Holat', '<span class="pill p-' + s[0] + '">' + esc(d.stl || s[1]) + '</span>') +
+        kv('Omborga', d.posted ? 'kirgan' : 'kirmagan') + '</div>';
+      h += '<div class="card"><h2>' + ic('list') + 'Qatorlar · ' + (d.lines.length + (d.more || 0)) + '</h2><div class="list">' + d.lines.map(function (l, i) {
+        return '<div class="row flat"><div class="grow"><div style="font-size:14px;overflow-wrap:anywhere">' + (i + 1) + '. ' + esc(l.n || '—') + '</div><div class="t2">' + qty(l.q, l.u) + (l.sv ? ' · xizmat' : '') + '</div></div><b style="font-variant-numeric:tabular-nums;flex:0 0 auto">' + money(l.s) + '</b></div>';
+      }).join('') + '</div>' + (d.more ? '<div class="count">yana ' + d.more + ' ta qator</div>' : '') + '</div>';
+      h += '<p class="hint">PDF va Excel — botda: tashkilot → Hujjatlar.</p>';
+      openSheet(h);
+    }).catch(function (e) { openSheet(back + '<div class="card empty">' + ic('alert') + '<div>' + esc(e.message) + '</div></div>'); });
+  }
+  // Bot jurnali (xizmat logi) — muammoni telefondan ko'rish uchun
+  function logSheet() {
+    reopen = null;
+    openFirm = null;
+    var head = sheetHead('Bot jurnali', 'Xizmatning oxirgi yozuvlari', 'list', 'c-gray');
+    openSheet(head + loadingCard());
+    api('GET', '/api/log').then(function (j) {
+      LOGS = j.lines || [];
+      renderLog(head);
+    }).catch(function (e) { openSheet(head + '<div class="card empty">' + ic('alert') + '<div>' + esc(e.message) + '</div></div>'); });
+  }
+  var LOGS = [];
+  function isErr(l) { return /❗|error|xato(?!lar:\s*0\b)|failed|ishlamadi|yiqildi/i.test(l); }
+  function renderLog(head) {
+    var errs = LOGS.filter(isErr);
+    var list = (ui.logF === 'err' ? errs : LOGS).slice().reverse();
+    var h = head + '<div class="seg">' + [['err', 'Xatolar · ' + errs.length], ['all', 'Hammasi · ' + LOGS.length]].map(function (x) {
+      return '<button data-logf="' + x[0] + '" class="' + (ui.logF === x[0] ? 'on' : '') + '">' + x[1] + '</button>';
+    }).join('') + '</div>';
+    h += '<div class="card">' + (list.length ? '<div class="list">' + list.map(function (l) {
+      var m = /^(\d{4}-\d\d-\d\dT[\d:.]+Z)\s+(.*)$/.exec(l);
+      return '<div class="row flat"><span class="dot d-' + (isErr(l) ? 'bad' : 'gray') + '"></span><div class="grow"><div class="logline">' + esc(m ? m[2] : l) + '</div>' + (m ? '<div class="t2">' + dt(m[1]) + '</div>' : '') + '</div></div>';
+    }).join('') + '</div>' : '<div class="empty">' + ic('check') + '<div>' + (ui.logF === 'err' ? 'Xato yo‘q' : 'Jurnal bo‘sh') + '</div></div>') + '</div>';
+    h += '<p class="hint">Parol va tokenlar jurnalga yozilmaydi (*** bilan yashiriladi).</p>';
+    openSheet(h, true);
   }
 
   // ═════════ ODAMLAR ═════════
@@ -781,19 +955,20 @@
       h += '</details>';
     });
     h += '</div>';
-    var licState = { ok: ['ok', 'Faol'], expiring: ['warn', (lic.left || 0) + ' kun qoldi'], grace: ['warn', 'Muddati o‘tdi'], expired: ['bad', 'Tugagan'] }[lic.st] || ['gray', lic.st || '—'];
+    var licState = { valid: ['ok', 'Faol'], ok: ['ok', 'Faol'], expiring: ['warn', (lic.left || 0) + ' kun qoldi'], grace: ['warn', 'Muddati o‘tdi'], expired: ['bad', 'Tugagan'] }[lic.st] || ['gray', lic.st || '—'];
     h += '<div class="sec-title">' + ic('shield') + 'Tizim</div><div class="card">';
     h += kv('Bot', D.bot && D.bot.u ? '@' + esc(D.bot.u) : '—');
     h += kv('Versiya', esc((D.bot && D.bot.ver) || '—'));
     h += kv('Ishlayapti', D.bot && D.bot.up != null ? upTime(D.bot.up) : '—');
     h += kv('Obuna', esc(lic.plan || '—') + ' <span class="pill p-' + licState[0] + '">' + licState[1] + '</span>');
-    if (lic.until) h += kv('Amal qiladi', esc(lic.until) + ' gacha');
+    if (lic.until) h += kv('Amal qiladi', day(lic.until) + ' gacha');
     if (lic.firms) h += kv('Tarif chegarasi', (lic.firms > 999 ? 'cheksiz' : lic.firms) + ' tashkilot · ' + (lic.users > 999 ? 'cheksiz' : lic.users) + ' foydalanuvchi');
     h += kv('Oxirgi to‘liq yangilash', sys.full ? dt(sys.full) + (sys.fullErr ? ' <span class="pill p-bad">' + sys.fullErr + ' xato</span>' : '') : 'hali bo‘lmagan');
     h += kv('Tezkor tekshiruv', sys.quick ? ago(sys.quick) : '—');
     h += kv('Zaxira nusxa', sys.bk ? esc(sys.bk) : 'hali olinmagan');
     h += kv('Maxfiylik siyosati', sys.ps ? 'Imzolangan ' + dt(sys.ps, false) : '<span class="pill p-bad">Imzolanmagan</span>');
     if (sys.pp) h += kv('Siyosat matni', '<a href="#" data-open="' + esc(sys.pp) + '">Ochish ›</a>');
+    if (S.live) h += '<div class="btns"><button class="btn" data-logsheet="1">' + ic('list') + 'Bot jurnali</button></div>';
     h += '</div>';
     h += '<div class="sec-title">' + ic('clock') + 'Jurnal</div><div class="card">';
     var log = D.log || [];
@@ -816,15 +991,17 @@
   function sheetHead(title, sub, icon, color, avatarHtml) {
     return '<div class="sheet-head">' + (avatarHtml || (icon ? '<div class="sq ' + color + '">' + ic(icon) + '</div>' : '')) + '<div style="min-width:0"><h3>' + esc(title) + '</h3>' + (sub ? '<p>' + esc(sub) + '</p>' : '') + '</div><button class="x" data-close="1" aria-label="Yopish">' + ic('x') + '</button></div>';
   }
-  function openSheet(html) {
+  function openSheet(html, keepScroll) {
     $('sheetbody').innerHTML = html;
-    $('sheet').scrollTop = 0;
+    $('sheet').style.minHeight = '';
+    if (!keepScroll) $('sheet').scrollTop = 0;
     $('sheet').classList.add('open');
     $('sheetbg').classList.add('open');
     if (inTg) try { tg.BackButton.show(); } catch (e) {}
   }
   function closeSheet() {
     reopen = null;
+    openFirm = null;
     $('sheet').classList.remove('open');
     $('sheetbg').classList.remove('open');
     if (inTg) try { tg.BackButton.hide(); } catch (e) {}
@@ -833,7 +1010,7 @@
 
   // ───────── bosishlar ─────────
   document.addEventListener('click', function (e) {
-    var t = e.target.closest('[data-share],[data-copy],[data-tab],[data-quick],[data-firm],[data-sync],[data-freeze],[data-ff],[data-pv],[data-rf],[data-people],[data-user],[data-guest],[data-revoke],[data-unq],[data-submit],[data-clearq],[data-bc],[data-bcsend],[data-set],[data-demosave],[data-urole],[data-uapply],[data-umsg],[data-block],[data-del],[data-irole],[data-icreate],[data-open],[data-close],[data-journal]');
+    var t = e.target.closest('[data-share],[data-copy],[data-tab],[data-quick],[data-firm],[data-sync],[data-freeze],[data-ff],[data-pv],[data-rf],[data-people],[data-user],[data-guest],[data-revoke],[data-unq],[data-submit],[data-clearq],[data-bc],[data-bcsend],[data-set],[data-demosave],[data-urole],[data-uapply],[data-umsg],[data-block],[data-del],[data-irole],[data-icreate],[data-open],[data-close],[data-journal],[data-fsec],[data-doc],[data-ddir],[data-negf],[data-logf],[data-backfirm],[data-logsheet]');
     if (!t) return;
     var a = function (n) { return t.getAttribute(n); };
     if (a('data-close')) return closeSheet();
@@ -858,7 +1035,14 @@
       if (qk === 'invite') { inv = { role: 'user' }; return inviteSheet(); }
       if (qk === 'syncall') return confirmBox('Hamma tashkilot Didox’dan yangilansinmi?' + closes(), function () { submit([['sync', 'all']]); });
     }
-    if (a('data-firm')) return firmSheet(a('data-firm'));
+    if (a('data-firm')) { ui.fsec = 'over'; ui.docQ = ''; ui.ddir = 'all'; ui.negF = 'all'; return firmSheet(a('data-firm')); }
+    if (a('data-fsec')) { ui.fsec = a('data-fsec'); haptic(); return firmSheet(openFirm, true); }
+    if (a('data-ddir')) { ui.ddir = a('data-ddir'); haptic(); return firmSheet(openFirm, true); }
+    if (a('data-negf')) { ui.negF = a('data-negf'); haptic(); return firmSheet(openFirm, true); }
+    if (a('data-doc')) return docSheet(openFirm, a('data-doc'));
+    if (a('data-backfirm')) return firmSheet(a('data-backfirm'));
+    if (a('data-logsheet')) return logSheet();
+    if (a('data-logf')) { ui.logF = a('data-logf'); haptic(); return renderLog(sheetHead('Bot jurnali', 'Xizmatning oxirgi yozuvlari', 'list', 'c-gray')); }
     if (a('data-sync')) { var st = a('data-sync'); return confirmBox(firmName(st) + ' hozir yangilansinmi?' + closes(), function () { submit([['sync', st]]); }); }
     if (a('data-freeze')) {
       var ft = a('data-freeze'), on = a('data-on') === '1', f = firm(ft);
@@ -960,6 +1144,12 @@
     if (id === 'firmq' || id === 'peopleq') {
       if (id === 'firmq') ui.firmQ = e.target.value; else ui.peopleQ = e.target.value;
       var pos = e.target.selectionStart; render(); var el = $(id); if (el) { el.focus(); el.setSelectionRange(pos, pos); }
+    }
+    if (id === 'docq') {
+      ui.docQ = e.target.value;
+      var c = FD[openFirm];
+      if (c && $('doclist')) $('doclist').innerHTML = docRows(c.d);
+      return;
     }
     if (id === 'bctext') {
       ui.bcText = e.target.value;
