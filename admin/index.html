@@ -229,6 +229,113 @@
   .fatal { margin-top: 40px; }
   .fatal .card { text-align: center; padding: 28px 20px; }
   .fatal svg { width: 40px; height: 40px; color: var(--hint); }
+
+  /* ═════ Harakat va bezak (2026-10-13, foydalanuvchi: «animatsion va professional ko'rinishda») ═════ */
+  :root { --ease: cubic-bezier(.2, .8, .2, 1); --spring: cubic-bezier(.34, 1.56, .64, 1); --sheet-ease: cubic-bezier(.32, .72, 0, 1); }
+  @keyframes rise { from { opacity: 0; transform: translateY(14px) scale(.985); } to { opacity: 1; transform: none; } }
+  @keyframes fadein { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes growx { from { transform: scaleX(0); } }
+  @keyframes growy { from { transform: scaleY(0); } }
+  @keyframes pop { 0% { transform: scale(.55); opacity: 0; } 100% { transform: none; opacity: 1; } }
+  @keyframes shimmer { 0% { background-position: 100% 0; } 100% { background-position: -100% 0; } }
+  @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(32, 164, 100, .55); } 70% { box-shadow: 0 0 0 7px rgba(32, 164, 100, 0); } 100% { box-shadow: 0 0 0 0 rgba(32, 164, 100, 0); } }
+  @keyframes float { 50% { transform: translate(-16px, 12px) scale(1.08); } }
+  @keyframes shine { 0% { transform: translateX(-120%) skewX(-20deg); } 60%, 100% { transform: translateX(260%) skewX(-20deg); } }
+
+  /* Sahifa kirishi: kartochkalar birin-ketin ko'tariladi (faqat bo'lim almashganda — avto-yangilashda emas) */
+  #view.anim > * { animation: rise .5s var(--ease) both; }
+  #view.anim > *:nth-child(2) { animation-delay: .04s; } #view.anim > *:nth-child(3) { animation-delay: .08s; }
+  #view.anim > *:nth-child(4) { animation-delay: .12s; } #view.anim > *:nth-child(5) { animation-delay: .16s; }
+  #view.anim > *:nth-child(6) { animation-delay: .2s; } #view.anim > *:nth-child(7) { animation-delay: .24s; }
+  #view.anim > *:nth-child(n+8) { animation-delay: .28s; }
+  #view.anim .kpis > *, #view.anim .quick > * { animation: pop .45s var(--spring) both; }
+  #view.anim .kpis > *:nth-child(2), #view.anim .quick > *:nth-child(2) { animation-delay: .07s; }
+  #view.anim .kpis > *:nth-child(3), #view.anim .quick > *:nth-child(3) { animation-delay: .14s; }
+  #view.anim .kpis > *:nth-child(4) { animation-delay: .21s; }
+  .bars .fill { transform-origin: left center; }
+  #view.anim .bars .fill { animation: growx 1s var(--ease) both .25s; }
+  .spark i { transform-origin: bottom; }
+  #view.anim .spark i { animation: growy .7s var(--ease) both; animation-delay: calc(var(--i, 0) * 30ms + .2s); }
+
+  /* Oyna: iOS kabi chiqish, orqa fon xiralashadi; birinchi ochilganda ichi birin-ketin */
+  .sheet-bg { backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px); transition: opacity .3s ease; }
+  .sheet { transition: transform .42s var(--sheet-ease), visibility 0s .42s; box-shadow: 0 -10px 40px rgba(0, 0, 0, .18); }
+  .sheet.open { transition: transform .42s var(--sheet-ease); }
+  #sheetbody.fresh > * { animation: rise .45s var(--ease) both; }
+  #sheetbody.fresh > *:nth-child(2) { animation-delay: .05s; } #sheetbody.fresh > *:nth-child(3) { animation-delay: .1s; }
+  #sheetbody.fresh > *:nth-child(4) { animation-delay: .15s; } #sheetbody.fresh > *:nth-child(n+5) { animation-delay: .2s; }
+  .secbody.in > * { animation: rise .38s var(--ease) both; }
+  .secbody.in > *:nth-child(2) { animation-delay: .05s; } .secbody.in > *:nth-child(n+3) { animation-delay: .1s; }
+
+  /* Bosilganda — yengil siqilish */
+  .btn, .kpi, .quick button, .chips button, .seg button, .row, .banner, .top .refresh, .sheet-head .x, .bars .b { transition: transform .14s var(--ease), background-color .2s ease, box-shadow .2s ease, color .2s ease, opacity .2s ease; }
+  .btn:active, .kpi:active, .quick button:active, .top .refresh:active, .sheet-head .x:active { transform: scale(.96); }
+  .chips button:active, .seg button:active { transform: scale(.95); }
+  .row:active { transform: scale(.992); }
+  .btn.primary { background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 88%, #fff), var(--accent)); box-shadow: 0 4px 14px color-mix(in srgb, var(--accent) 35%, transparent); }
+  .kpi { position: relative; overflow: hidden; }
+  .card, .kpi, .quick button { border: 1px solid color-mix(in srgb, var(--hint) 9%, transparent); }
+  .seg button.on { animation: pop .25s var(--spring); }
+  .chips button { transition: background-color .2s ease, border-color .2s ease, color .2s ease, transform .14s var(--ease); }
+  @media (hover: hover) {
+    .row:hover, .bars .b:hover { background: color-mix(in srgb, var(--hint) 7%, transparent); }
+    .kpi:hover, .quick button:hover { box-shadow: 0 6px 18px rgba(16, 24, 40, .1); transform: translateY(-1px); }
+  }
+
+  /* Sarlavha: siljiganda shishasimon bo'lib qoladi */
+  .top { position: sticky; top: 0; z-index: 5; margin: 0 -14px; padding: 14px 16px 10px; background: var(--bg); transition: box-shadow .25s ease, background-color .25s ease; }
+  .top.scrolled { background: color-mix(in srgb, var(--bg) 82%, transparent); backdrop-filter: blur(16px) saturate(1.4); -webkit-backdrop-filter: blur(16px) saturate(1.4); box-shadow: 0 1px 0 var(--line); }
+  .logo { position: relative; overflow: hidden; }
+  .logo::after { content: ''; position: absolute; inset: 0; width: 40%; background: linear-gradient(90deg, transparent, rgba(255, 255, 255, .45), transparent); animation: shine 4.5s ease-in-out 1s infinite; }
+  .live .livedot { animation: pulse 2s ease-out infinite; }
+
+  /* Bosh kartochka (hero) */
+  .hero { position: relative; overflow: hidden; border-radius: 22px; padding: 18px 18px 16px; margin-bottom: 12px; color: #fff; background: linear-gradient(135deg, #4C94FF 0%, #1D5FD6 52%, #0B2F78 100%); box-shadow: 0 12px 30px rgba(29, 95, 214, .32); }
+  .hero::before, .hero::after { content: ''; position: absolute; border-radius: 50%; pointer-events: none; }
+  .hero::before { width: 240px; height: 240px; right: -70px; top: -110px; background: radial-gradient(circle, rgba(255, 255, 255, .26), transparent 68%); animation: float 9s ease-in-out infinite; }
+  .hero::after { width: 180px; height: 180px; left: -60px; bottom: -100px; background: radial-gradient(circle, rgba(120, 200, 255, .35), transparent 70%); animation: float 12s ease-in-out infinite reverse; }
+  .hero > * { position: relative; }
+  .hero .hl { display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: 13px; opacity: .88; font-weight: 550; }
+  .hero .hn { font-size: 32px; line-height: 1.1; font-weight: 780; letter-spacing: -.025em; margin: 8px 0 4px; font-variant-numeric: tabular-nums; }
+  .hero .hn small { font-size: 15px; font-weight: 600; opacity: .8; margin-left: 6px; letter-spacing: 0; }
+  .hero .hs { font-size: 13px; opacity: .85; }
+  .hero .hc { display: inline-flex; align-items: center; gap: 7px; margin-top: 14px; padding: 6px 12px 6px 9px; border-radius: 999px; background: rgba(255, 255, 255, .16); border: 1px solid rgba(255, 255, 255, .24); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); font-size: 13px; font-weight: 650; }
+  .hero .hc i { width: 8px; height: 8px; border-radius: 50%; background: #5BE49B; box-shadow: 0 0 0 3px rgba(91, 228, 155, .3); }
+  .hero .hc.bad i { background: #FF8A8E; box-shadow: 0 0 0 3px rgba(255, 138, 142, .3); }
+  .hero .hc.warn i { background: #FFC46B; box-shadow: 0 0 0 3px rgba(255, 196, 107, .3); }
+  .hero .tag { padding: 3px 9px; border-radius: 999px; background: rgba(255, 255, 255, .16); font-size: 11.5px; font-weight: 650; letter-spacing: .02em; }
+
+  /* Pastki navigatsiya: faol belgi kapsulada */
+  nav.tabbar button .ti { width: 56px; height: 30px; border-radius: 15px; display: grid; place-items: center; transition: background-color .25s ease, transform .25s var(--spring); }
+  nav.tabbar button.on .ti { background: var(--soft); }
+  nav.tabbar button.on .ti svg { animation: pop .35s var(--spring); }
+  nav.tabbar button em { top: 4px; left: calc(50% + 10px); animation: pop .4s var(--spring); }
+
+  /* Yuklanish skeleti */
+  .skel { border-radius: 8px; background: linear-gradient(90deg, color-mix(in srgb, var(--hint) 13%, transparent) 30%, color-mix(in srgb, var(--hint) 24%, transparent) 50%, color-mix(in srgb, var(--hint) 13%, transparent) 70%); background-size: 300% 100%; animation: shimmer 1.4s ease-in-out infinite; }
+  .skrow { display: flex; align-items: center; gap: 12px; padding: 11px 0; }
+  .skrow .skel.c { width: 40px; height: 40px; border-radius: 12px; flex: 0 0 auto; }
+  .skrow .lines { flex: 1; display: grid; gap: 8px; }
+  .skrow .lines .skel { height: 11px; }
+  .skhero { height: 150px; border-radius: 22px; margin-bottom: 12px; }
+  .skkpi { height: 108px; border-radius: 16px; }
+
+  /* Bildirishnoma, kutish, saqlanmagan o'zgarishlar — silliq chiqadi */
+  .toast { display: block !important; opacity: 0; pointer-events: none; transform: translate(-50%, -16px) scale(.96); transition: opacity .25s ease, transform .35s var(--spring); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border-radius: 14px; padding: 10px 18px; font-weight: 550; }
+  .toast.show { opacity: 1; transform: translate(-50%, 0) scale(1); }
+  .busy { display: grid !important; opacity: 0; pointer-events: none; transition: opacity .2s ease; backdrop-filter: blur(2px); -webkit-backdrop-filter: blur(2px); }
+  .busy.on { opacity: 1; pointer-events: auto; transition-delay: .12s; }
+  .busy div { transform: scale(.9); transition: transform .3s var(--spring); }
+  .busy.on div { transform: none; }
+  .pending { display: flex !important; opacity: 0; pointer-events: none; transform: translate(-50%, 24px); transition: opacity .25s ease, transform .4s var(--spring); }
+  .pending.show { opacity: 1; pointer-events: auto; transform: translate(-50%, 0); }
+  .empty svg { width: 46px; height: 46px; padding: 11px; border-radius: 50%; background: var(--soft); color: var(--accent); opacity: 1; }
+  .banner { animation: none; }
+  .banner .ico { box-shadow: 0 4px 12px rgba(0, 0, 0, .12); }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+  }
 </style>
 </head>
 <body>
@@ -238,7 +345,7 @@
     <div style="min-width:0"><h1>Boshqaruv paneli</h1><p><span class="livedot"></span><span id="sub">Material Hisobot</span></p></div>
     <button class="refresh" id="refresh" aria-label="Yangilash"><svg viewBox="0 0 24 24" class="i"><path d="M21 12a9 9 0 1 1-2.64-6.36L21 8"/><path d="M21 3v5h-5"/></svg></button>
   </header>
-  <div id="view"></div>
+  <div id="view"><div class="skel skhero"></div><div class="kpis"><div class="skel skkpi"></div><div class="skel skkpi"></div><div class="skel skkpi"></div><div class="skel skkpi"></div></div><div class="card"><div class="skrow"><div class="skel c"></div><div class="lines"><div class="skel" style="width:70%"></div><div class="skel" style="width:45%"></div></div></div><div class="skrow"><div class="skel c"></div><div class="lines"><div class="skel" style="width:60%"></div><div class="skel" style="width:35%"></div></div></div></div></div>
 </main>
 <nav class="tabbar" id="tabbar"></nav>
 <div class="pending" id="pending"><span class="dot"></span><span id="pcount"></span><button class="see" id="psee">Ko‘rish</button><button class="save" id="psave">Saqlash</button></div>
@@ -320,7 +427,7 @@
   function ava(name, id) { return '<div class="ava" style="background:' + colorOf(id) + '">' + initial(name) + '</div>'; }
   function haptic(kind) { try { if (kind === 'ok') tg.HapticFeedback.notificationOccurred('success'); else if (kind === 'err') tg.HapticFeedback.notificationOccurred('error'); else if (kind === 'warn') tg.HapticFeedback.notificationOccurred('warning'); else tg.HapticFeedback.selectionChanged(); } catch (e) {} }
   var toastTimer;
-  function toast(t) { var el = $('toast'); el.textContent = t; el.style.display = 'block'; clearTimeout(toastTimer); toastTimer = setTimeout(function () { el.style.display = 'none'; }, 2400); }
+  function toast(t) { var el = $('toast'); el.textContent = t; el.classList.add('show'); clearTimeout(toastTimer); toastTimer = setTimeout(function () { el.classList.remove('show'); }, 2400); }
   function closes() { return S.live ? '' : ' Panel yopiladi, natija chatga keladi.'; }
   function confirmBox(text, fn) { if (inTg && tg.showConfirm) tg.showConfirm(text, function (ok) { if (ok) fn(); }); else if (window.confirm(text)) fn(); }
   function openLink(url) { if (!url) return; if (inTg && tg.openLink) tg.openLink(url); else window.open(url, '_blank'); }
@@ -477,14 +584,35 @@
     var leads = (D.guests || []).filter(function (g) { return Date.now() - new Date(g.fs).getTime() < 3 * 86400e3; }).length;
     $('tabbar').innerHTML = TABS.map(function (t) {
       var badge = t[0] === 'firms' && bad ? bad : t[0] === 'people' && leads ? leads : 0;
-      return '<button data-tab="' + t[0] + '" class="' + (tab === t[0] ? 'on' : '') + '">' + ic(t[1]) + t[2] + (badge ? '<em>' + badge + '</em>' : '') + '</button>';
+      return '<button data-tab="' + t[0] + '" class="' + (tab === t[0] ? 'on' : '') + '"><span class="ti">' + ic(t[1]) + '</span>' + t[2] + (badge ? '<em>' + badge + '</em>' : '') + '</button>';
     }).join('');
   }
-  function render() {
+  function render(animate) {
     renderNav();
-    $('view').innerHTML = { home: viewHome, firms: viewFirms, people: viewPeople, msg: viewMsg, set: viewSet }[tab]();
+    var v = $('view');
+    v.classList.remove('anim');
+    v.innerHTML = { home: viewHome, firms: viewFirms, people: viewPeople, msg: viewMsg, set: viewSet }[tab]();
+    if (animate) { void v.offsetWidth; v.classList.add('anim'); countUp(v); }
   }
-  function go(t) { tab = t; haptic(); render(); window.scrollTo(0, 0); }
+  function go(t) { tab = t; haptic(); render(true); window.scrollTo(0, 0); }
+  // Raqamlar 0 dan sanab chiqadi (faqat bo'lim ochilganda)
+  var reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function countUp(root) {
+    if (reduced) return;
+    Array.prototype.forEach.call(root.querySelectorAll('[data-count]'), function (el) {
+      var to = Number(el.getAttribute('data-count')) || 0, fmt = el.getAttribute('data-fmt'), t0 = null, dur = 900;
+      if (!to) return;
+      var show = function (n) { el.textContent = fmt === 'money' ? money(n) : fmt === 'short' ? short(n) : String(Math.round(n)); };
+      show(0);
+      var step = function (ts) {
+        if (t0 === null) t0 = ts;
+        var k = Math.min(1, (ts - t0) / dur), e = 1 - Math.pow(1 - k, 3);
+        show(to * e);
+        if (k < 1) requestAnimationFrame(step); else show(to);
+      };
+      requestAnimationFrame(step);
+    });
+  }
 
   // ═════════ ASOSIY ═════════
   function viewHome() {
@@ -496,16 +624,20 @@
     if (!sys.tok && !D.demo) warns.push(['bad', 'key', 'Didox partner tokeni yozilmagan', 'Botda: Sozlamalar → Tizim holati → Partner tokeni']);
     if (lic.st === 'expired') warns.push(['bad', 'shield', 'Obuna muddati tugagan', 'Didox’dan yangilash to‘xtagan. Uzaytirish uchun sotuvchiga murojaat qiling.']);
     else if (lic.st === 'grace' || lic.st === 'expiring') warns.push(['warn', 'shield', 'Obuna tugayapti', (lic.until ? day(lic.until) + ' gacha' : '') + (lic.left != null ? ' · ' + lic.left + ' kun qoldi' : '')]);
-    if (bad.length) warns.push(['bad', 'alert', bad.length + ' ta tashkilotda muammo', bad.map(function (f) { return f.n; }).join(', ')]);
     var h = '';
-    if (!warns.length) h += '<div class="banner ok"><div class="ico">' + ic('check') + '</div><div><b>Hammasi joyida</b><span>Tizim ishlayapti · oxirgi yangilanish ' + ago(sys.quick || sys.full) + '</span></div></div>';
+    var attn = active.filter(function (f) { return stateOf(f)[0] !== 'ok'; }).length;
+    var hc = bad.length || warns.some(function (w) { return w[0] === 'bad'; }) ? ['bad', bad.length ? bad.length + ' ta tashkilotda muammo' : 'Diqqat talab qilinadi'] : warns.length || attn ? ['warn', attn ? attn + ' ta tashkilotda diqqat kerak' : 'Diqqat talab qilinadi'] : ['ok', 'Hammasi joyida'];
+    h += '<div class="hero"><div class="hl"><span>Jami ombor qiymati</span><span class="tag">' + (S.live ? 'JONLI' : dt(D.at, false)) + '</span></div>' +
+      '<div class="hn"><span data-count="' + Math.round(stock) + '" data-fmt="money">' + money(stock) + '</span><small>so‘m</small></div>' +
+      '<div class="hs">' + plural(active.length, 'faol tashkilot') + ' · yangilangan ' + ago(sys.quick || sys.full) + '</div>' +
+      '<div class="hc ' + hc[0] + '"' + (hc[0] !== 'ok' ? ' data-tab="firms"' : '') + '><i></i>' + esc(hc[1]) + '</div></div>';
     warns.forEach(function (w) { h += '<div class="banner ' + w[0] + '"' + (w[1] === 'alert' ? ' data-tab="firms"' : '') + '><div class="ico">' + ic(w[1]) + '</div><div><b>' + esc(w[2]) + '</b><span>' + esc(w[3]) + '</span></div></div>'; });
 
     var blocked = users.filter(function (x) { return x.b; }).length;
     h += '<div class="kpis">';
     h += kpi('building', 'c-blue', active.length, 'Faol tashkilot' + (firms.length - active.length ? ' · ' + (firms.length - active.length) + ' muzlatilgan' : ''), 'firms');
     h += kpi('users', 'c-violet', users.length, 'Foydalanuvchi' + (blocked ? ' · ' + blocked + ' to‘xtatilgan' : ''), 'people');
-    h += kpi('box', 'c-green', short(stock), 'Ombor qiymati, so‘m', 'firms');
+    h += kpi('alert', attn ? 'c-red' : 'c-green', attn, attn ? 'Diqqat talab qiladi' : 'Muammoli tashkilot yo‘q', 'firms');
     h += kpi('pulse', 'c-orange', (u.active && u.active.week) || 0, 'Faol · so‘nggi 7 kun', 'people');
     h += '</div>';
 
@@ -527,7 +659,7 @@
       var gmax = Math.max.apply(null, gd.concat([1]));
       var total = gd.reduce(function (a, b) { return a + b; }, 0);
       h += '<div class="card"><h2>' + ic('wave') + 'Yangi qiziqqanlar · 14 kun<button class="more" data-people="guests">' + total + ' ta</button></h2>' +
-        '<div class="spark">' + gd.map(function (n) { return '<i class="' + (n ? '' : 'zero') + '" style="height:' + Math.max(4, Math.round((n / gmax) * 100)) + '%" title="' + n + '"></i>'; }).join('') + '</div>' +
+        '<div class="spark">' + gd.map(function (n, i) { return '<i class="' + (n ? '' : 'zero') + '" style="--i:' + i + ';height:' + Math.max(4, Math.round((n / gmax) * 100)) + '%" title="' + n + '"></i>'; }).join('') + '</div>' +
         '<div class="spark-x"><span>14 kun oldin</span><span>bugun</span></div></div>';
     }
 
@@ -538,7 +670,7 @@
     h += '<p class="hint">' + (S.live ? 'Jonli ulanish — ma’lumot o‘zi yangilanib turadi, amallar darhol bajariladi.' : 'Ma’lumot ' + dt(D.at) + ' holatiga. Yangilash uchun panelni botdan qayta oching.') + '</p>';
     return h;
   }
-  function kpi(icon, color, value, label, target) { return '<button class="kpi" data-tab="' + target + '"><div class="ico ' + color + '">' + ic(icon) + '</div><b>' + esc(value) + '</b><span>' + esc(label) + '</span></button>'; }
+  function kpi(icon, color, value, label, target) { return '<button class="kpi" data-tab="' + target + '"><div class="ico ' + color + '">' + ic(icon) + '</div><b' + (typeof value === 'number' ? ' data-count="' + value + '"' : '') + '>' + esc(value) + '</b><span>' + esc(label) + '</span></button>'; }
   function quick(icon, color, label, act) { return '<button data-quick="' + act + '"><div class="ico ' + color + '">' + ic(icon) + '</div>' + esc(label) + '</button>'; }
   function logRow(l) { return '<div class="row flat"><div class="grow"><div style="font-size:14px">' + esc(l.t) + '</div><div class="t2">' + ago(l.at) + '</div></div></div>'; }
 
@@ -601,16 +733,20 @@
     var c = FD[tin];
     var fd = c && c.d;
     if (S.live && (!c || Date.now() - c.at > 60000)) {
-      loadFirm(tin).then(function () { if (openFirm === tin && $('sheet').classList.contains('open')) firmSheet(tin, true); })
+      loadFirm(tin).then(function () { if (openFirm === tin && $('sheet').classList.contains('open')) { ui.secAnim = sec !== 'over'; firmSheet(tin, true); } })
         .catch(function (e) { if (openFirm === tin && sec !== 'over') openSheet(head + '<div class="card empty">' + ic('alert') + '<div>' + esc(e.message) + '</div></div>', true); });
     }
     if (sec !== 'over' && !fd) return openSheet(head + loadingCard(), keepScroll);
     var body = { over: firmOverview, docs: firmDocs, stock: firmStock, kassa: firmKassa, ev: firmEvents }[sec](f, fd);
-    openSheet(head + body, keepScroll);
+    var anim = ui.secAnim; ui.secAnim = false;
+    openSheet(head + '<div class="secbody' + (anim ? ' in' : '') + '">' + body + '</div>', keepScroll);
     // Bo'limlar almashganda oyna balandligi sakramasin
     if (S.live) $('sheet').style.minHeight = '82vh';
   }
-  function loadingCard() { return '<div class="card empty"><svg viewBox="0 0 24 24" class="i spinner"><path d="M21 12a9 9 0 1 1-6.22-8.56"/></svg><div>Yuklanmoqda…</div></div>'; }
+  function loadingCard() {
+    var row = function (a, b) { return '<div class="skrow"><div class="skel c"></div><div class="lines"><div class="skel" style="width:' + a + '%"></div><div class="skel" style="width:' + b + '%"></div></div></div>'; };
+    return '<div class="card">' + row(72, 40) + row(58, 34) + row(66, 46) + row(50, 30) + '</div>';
+  }
   function firmOverview(f, fd) {
     var tin = f.t;
     var st = stateOf(f), iss = issuesOf(f);
@@ -992,7 +1128,11 @@
     return '<div class="sheet-head">' + (avatarHtml || (icon ? '<div class="sq ' + color + '">' + ic(icon) + '</div>' : '')) + '<div style="min-width:0"><h3>' + esc(title) + '</h3>' + (sub ? '<p>' + esc(sub) + '</p>' : '') + '</div><button class="x" data-close="1" aria-label="Yopish">' + ic('x') + '</button></div>';
   }
   function openSheet(html, keepScroll) {
-    $('sheetbody').innerHTML = html;
+    var body = $('sheetbody');
+    var first = !$('sheet').classList.contains('open');
+    body.classList.remove('fresh');
+    body.innerHTML = html;
+    if (first) { void body.offsetWidth; body.classList.add('fresh'); }
     $('sheet').style.minHeight = '';
     if (!keepScroll) $('sheet').scrollTop = 0;
     $('sheet').classList.add('open');
@@ -1036,7 +1176,7 @@
       if (qk === 'syncall') return confirmBox('Hamma tashkilot Didox’dan yangilansinmi?' + closes(), function () { submit([['sync', 'all']]); });
     }
     if (a('data-firm')) { ui.fsec = 'over'; ui.docQ = ''; ui.ddir = 'all'; ui.negF = 'all'; return firmSheet(a('data-firm')); }
-    if (a('data-fsec')) { ui.fsec = a('data-fsec'); haptic(); return firmSheet(openFirm, true); }
+    if (a('data-fsec')) { if (ui.fsec === a('data-fsec')) return; ui.fsec = a('data-fsec'); ui.secAnim = true; haptic(); return firmSheet(openFirm, true); }
     if (a('data-ddir')) { ui.ddir = a('data-ddir'); haptic(); return firmSheet(openFirm, true); }
     if (a('data-negf')) { ui.negF = a('data-negf'); haptic(); return firmSheet(openFirm, true); }
     if (a('data-doc')) return docSheet(openFirm, a('data-doc'));
@@ -1160,6 +1300,8 @@
   $('psee').addEventListener('click', pendingSheet);
   $('psave').addEventListener('click', function () { submit(); });
   $('sheetbg').addEventListener('click', closeSheet);
+  var topEl = document.querySelector('.top');
+  window.addEventListener('scroll', function () { topEl.classList.toggle('scrolled', window.scrollY > 6); }, { passive: true });
 
   // ───────── ishga tushish ─────────
   if (inTg) {
@@ -1185,7 +1327,7 @@
   load().then(function (data) {
     if (!data || data.v !== S.v) throw new Error('version');
     setData(data);
-    render();
+    render(true);
     renderPending();
   }).catch(function (e) {
     var why = { nodata: 'Panel ma’lumotsiz ochildi. Botda /start bosing va «👑 Admin panel» tugmasini tanlang.', noinit: 'Panelni bot ichidagi «👑 Admin panel» yoki «Admin» tugmasidan oching.', old: 'Telegram ilovangiz eski — iltimos, yangilang.', version: 'Panel yangilangan. Botda /start bosib, panelni qayta oching.' }[e && e.message] || (S.live ? e.message : 'Ma’lumotni o‘qib bo‘lmadi. Botda /start bosib, panelni qayta oching.');
