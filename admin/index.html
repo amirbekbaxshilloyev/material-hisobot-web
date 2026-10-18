@@ -916,6 +916,8 @@
     // 🧪 Demo bot — alohida bot va baza; bo'lim faqat demo nusxa bo'lsa chiqadi
     var segs = [['users', 'Foydalanuvchi', users.length], ['inv', 'Takliflar', inv.length], ['guests', 'Qiziqqanlar', guests.length]];
     if (dm) segs.push(['demo', 'Demo', dm.n || 0]);
+    // 🏢 Mijozlar (tenant) — o'z firmasini ulagan sinov/pullik mijozlar; faqat bor bo'lsa
+    if (D.tn) segs.splice(1, 0, ['tenants', 'Mijozlar', (D.tn.list || []).length]);
     h += '<div class="seg">' + segs.map(function (x) {
       return '<button data-pv="' + x[0] + '" class="' + (ui.peopleView === x[0] ? 'on' : '') + '">' + x[1] + ' · ' + x[2] + '</button>';
     }).join('') + '</div>';
@@ -953,6 +955,8 @@
       h += '</div></div>';
       h += '<div class="btns" style="margin-top:0"><button class="btn primary" data-quick="invite">' + ic('plus') + 'Yangi taklif havolasi</button></div>';
       h += '<p class="hint">Havola bir marta ishlaydi va 24 soat amal qiladi. Ochgan odam taklifdagi rol bilan botga kiradi.</p>';
+    } else if (ui.peopleView === 'tenants' && D.tn) {
+      h += viewTenants(D.tn, match);
     } else if (ui.peopleView === 'demo' && dm) {
       h += viewDemo(dm, match);
     } else {
@@ -969,6 +973,54 @@
       h += '</div></div>';
     }
     return h;
+  }
+
+  // ═════════ 🏢 MIJOZLAR (tenant) ═════════
+  // O'z firmasini ulagan mijozlar: sinov → pullik → muddati tugagan → muzlatilgan. To'lov va ariza — darhol (tasdiq bilan)
+  var TN_ST = { pending: ['Ro‘yxatdan o‘tmoqda', 'p-gray'], trial: ['Sinov', 'p-blue'], paid: ['Pullik', 'p-ok'], expired: ['Muddati tugagan', 'p-warn'], frozen: ['Muzlatilgan', 'p-bad'] };
+  var TN_PLANS = [['start', 'Start'], ['buxgalter', 'Buxgalter'], ['ofis', 'Ofis'], ['korporativ', 'Korporativ']];
+  function tnState(t) { var x = TN_ST[t.st] || [t.st, 'p-gray']; return '<span class="pill ' + x[1] + '">' + esc(x[0]) + '</span>'; }
+  function tnEnds(t) { return t.st === 'trial' ? t.te : t.st === 'paid' ? t.pu : t.st === 'expired' ? t.da : null; }
+  function tnName(id) { var t = ((D.tn && D.tn.list) || []).find(function (x) { return String(x.id) === String(id); }); return t ? t.n || '#' + t.id : '#' + id; }
+  function viewTenants(tn, match) {
+    var h = '';
+    var cl = tn.cl || [];
+    if (cl.length) {
+      h += '<div class="card"><h2>🪪 Firma egaligi arizalari · ' + cl.length + '</h2><div class="list">';
+      cl.forEach(function (c) {
+        h += '<div class="row flat"><div class="sq c-blue">' + ic('building') + '</div><div class="grow"><div class="t1">INN <code>' + esc(c.inn) + '</code> · ' + esc(tnName(c.t)) + '</div>' +
+          '<div class="t2">' + (c.who ? esc(c.who) + ' · ' : '') + (c.d ? c.d + ' ta hujjat' : 'hujjat hali yo‘q') + (c.ph ? ' · telefon bor' : '') + ' · ' + ago(c.at) + '</div>' +
+          (c.d ? '<div class="btns" style="margin-top:8px"><button class="btn primary" data-claim="' + esc(c.id) + '" data-ok="1">' + ic('check') + 'Tasdiqlash</button><button class="btn danger" data-claim="' + esc(c.id) + '" data-ok="0">Rad etish</button></div>' : '') + '</div></div>';
+      });
+      h += '</div></div>';
+      h += '<p class="hint">Hujjat fayli botda — «🪪 Ariza hujjati» xabarida. Tasdiqlangach mijoz faoliyat turini tanlaydi va 5 kunlik sinov boshlanadi.</p>';
+    }
+    var list = (tn.list || []).filter(match);
+    h += '<div class="card"><div class="list">';
+    if (!list.length) h += '<div class="empty">' + ic('building') + '<div>Hozircha mijoz yo‘q</div></div>';
+    list.forEach(function (t) {
+      var ends = tnEnds(t);
+      h += '<button class="row" data-tenant="' + esc(t.id) + '"><div class="sq c-green">' + ic('building') + '</div><div class="grow"><div class="t1">' + esc(t.n || '#' + t.id) + '</div>' +
+        '<div class="t2">' + (t.f || []).length + ' firma · ' + (t.u || 0) + ' kishi' + (ends ? ' · ' + (t.st === 'expired' ? 'muzlaydi ' : 'tugaydi ') + dt(ends, false) : '') + '</div></div>' + tnState(t) + ic('chev', 'chev') + '</button>';
+    });
+    h += '</div></div>';
+    return h;
+  }
+  function tenantSheet(id) {
+    reopen = function () { tenantSheet(id); };
+    var t = ((D.tn && D.tn.list) || []).find(function (x) { return String(x.id) === String(id); });
+    if (!t) return closeSheet();
+    var h = sheetHead(t.n || '#' + t.id, 'Mijoz #' + t.id + ' · ' + (TN_ST[t.st] || [t.st])[0], 'building', 'c-green');
+    h += '<div class="card">' + kv('Holati', tnState(t)) + kv('Tarif', esc(t.pl === 'trial' ? 'Sinov' : ((TN_PLANS.find(function (p) { return p[0] === t.pl; }) || [0, t.pl || '—'])[1]))) + kv('Ulangan', dt(t.ca, false)) +
+      (t.te ? kv('Sinov tugashi', dt(t.te)) : '') + (t.pu ? kv('To‘langan muddat', dt(t.pu, false) + ' gacha') : '') +
+      (t.st === 'expired' && t.da ? kv('Muzlatiladi', dt(t.da)) : '') + (t.fz ? kv('Muzlatilgan', dt(t.fz)) : '') +
+      kv('Firmalar', (t.f || []).length ? (t.f || []).map(function (x) { return '<code>' + esc(x) + '</code>'; }).join(', ') : '—') +
+      kv('Odamlar', (t.u || 0) + ' kishi') +
+      kv('Didox · bugun', (t.dx || 0) + (t.dl != null ? ' / ' + money(t.dl) : ' · cheklovsiz')) + '</div>';
+    h += '<div class="card"><h2>💳 To‘lov qabul qilindi</h2><div class="btns" style="margin-top:0">' + TN_PLANS.map(function (p) {
+      return '<button class="btn' + (t.pl === p[0] && t.st === 'paid' ? ' on' : '') + '" data-pay="' + esc(t.id) + '" data-plan="' + p[0] + '">' + esc(p[1]) + '</button>';
+    }).join('') + '</div><p class="hint" style="margin:10px 0 0">Tarif 30 kunga yoqiladi; oldindan to‘lansa — qolgan kunlar ustiga. Muzlatilgan mijozning Didox paroli o‘chgan — qayta ulash kerak bo‘ladi.</p></div>';
+    openSheet(h);
   }
 
   // ═════════ 🧪 DEMO BOT ═════════
@@ -1207,7 +1259,7 @@
 
   // ───────── bosishlar ─────────
   document.addEventListener('click', function (e) {
-    var t = e.target.closest('[data-share],[data-copy],[data-tab],[data-quick],[data-firm],[data-sync],[data-freeze],[data-ff],[data-pv],[data-rf],[data-people],[data-user],[data-guest],[data-demo],[data-revoke],[data-unq],[data-submit],[data-clearq],[data-bc],[data-bcsend],[data-set],[data-demosave],[data-urole],[data-uapply],[data-umsg],[data-block],[data-del],[data-irole],[data-icreate],[data-open],[data-close],[data-journal],[data-fsec],[data-doc],[data-ddir],[data-negf],[data-logf],[data-backfirm],[data-logsheet]');
+    var t = e.target.closest('[data-share],[data-copy],[data-tab],[data-quick],[data-firm],[data-sync],[data-freeze],[data-ff],[data-pv],[data-rf],[data-people],[data-user],[data-guest],[data-demo],[data-tenant],[data-pay],[data-claim],[data-revoke],[data-unq],[data-submit],[data-clearq],[data-bc],[data-bcsend],[data-set],[data-demosave],[data-urole],[data-uapply],[data-umsg],[data-block],[data-del],[data-irole],[data-icreate],[data-open],[data-close],[data-journal],[data-fsec],[data-doc],[data-ddir],[data-negf],[data-logf],[data-backfirm],[data-logsheet]');
     if (!t) return;
     var a = function (n) { return t.getAttribute(n); };
     if (a('data-close')) return closeSheet();
@@ -1252,6 +1304,15 @@
     if (a('data-user')) return userSheet(a('data-user'));
     if (a('data-guest')) return guestSheet(a('data-guest'));
     if (a('data-demo')) return demoSheet(a('data-demo'));
+    if (a('data-tenant')) return tenantSheet(a('data-tenant'));
+    if (a('data-pay')) {
+      var pt = a('data-pay'), pp = a('data-plan');
+      return confirmBox(tnName(pt) + ': to‘lov qabul qilindimi? «' + pp + '» tarifi 30 kunga yoqiladi.' + closes(), function () { submit([['pay', Number(pt), pp]]); });
+    }
+    if (a('data-claim')) {
+      var ci = a('data-claim'), cok = a('data-ok') === '1';
+      return confirmBox((cok ? 'Ariza tasdiqlansinmi? Mijoz ma’lumotni ko‘ra boshlaydi.' : 'Ariza rad etilsinmi? Didox paroli o‘chiriladi.') + closes(), function () { submit([['claim', Number(ci), cok ? 'y' : 'n']]); });
+    }
     if (a('data-revoke')) {
       var code = a('data-revoke');
       if (queued('revoke:' + code)) queue('revoke:' + code, null); else queue('revoke:' + code, ['revoke', code], 'Taklif havolasini bekor qilish');
