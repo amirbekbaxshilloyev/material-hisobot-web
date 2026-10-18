@@ -995,13 +995,24 @@
       h += '</div></div>';
       h += '<p class="hint">Hujjat fayli botda — «🪪 Ariza hujjati» xabarida. Tasdiqlangach mijoz faoliyat turini tanlaydi va 5 kunlik sinov boshlanadi.</p>';
     }
+    // 📈 Voronka (30 kun): har bosqichga nechta odam yetdi — eng kattasiga nisbatan chiziq
+    var fn = tn.fn || [];
+    if (fn.some(function (x) { return x[1]; })) {
+      var top = Math.max.apply(null, fn.map(function (x) { return x[1]; }).concat([1]));
+      h += '<div class="card"><h2>📈 Voronka · 30 kun</h2>' + fn.map(function (x) {
+        var w = Math.round((x[1] / top) * 100);
+        return '<div style="margin:8px 0"><div style="display:flex;justify-content:space-between;font-size:13.5px"><span>' + esc(x[0]) + '</span><b>' + x[1] + '</b></div>' +
+          '<div style="height:6px;border-radius:3px;background:var(--line);margin-top:4px"><div style="height:6px;border-radius:3px;background:var(--accent);width:' + w + '%"></div></div></div>';
+      }).join('') + '</div>';
+    }
     var list = (tn.list || []).filter(match);
+    list.sort(function (a, b) { return (b.sc || 0) - (a.sc || 0); });
     h += '<div class="card"><div class="list">';
     if (!list.length) h += '<div class="empty">' + ic('building') + '<div>Hozircha mijoz yo‘q</div></div>';
     list.forEach(function (t) {
       var ends = tnEnds(t);
       h += '<button class="row" data-tenant="' + esc(t.id) + '"><div class="sq c-green">' + ic('building') + '</div><div class="grow"><div class="t1">' + esc(t.n || '#' + t.id) + '</div>' +
-        '<div class="t2">' + (t.f || []).length + ' firma · ' + (t.u || 0) + ' kishi' + (ends ? ' · ' + (t.st === 'expired' ? 'muzlaydi ' : 'tugaydi ') + dt(ends, false) : '') + '</div></div>' + tnState(t) + ic('chev', 'chev') + '</button>';
+        '<div class="t2">' + (t.mk ? t.mk + ' ' : '') + (t.f || []).length + ' firma · ' + (t.u || 0) + ' kishi' + (ends ? ' · ' + (t.st === 'expired' ? 'o‘chadi ' : 'tugaydi ') + dt(ends, false) : '') + '</div></div>' + tnState(t) + ic('chev', 'chev') + '</button>';
     });
     h += '</div></div>';
     return h;
@@ -1016,7 +1027,8 @@
       (t.st === 'expired' && t.da ? kv('Muzlatiladi', dt(t.da)) : '') + (t.fz ? kv('Muzlatilgan', dt(t.fz)) : '') +
       kv('Firmalar', (t.f || []).length ? (t.f || []).map(function (x) { return '<code>' + esc(x) + '</code>'; }).join(', ') : '—') +
       kv('Odamlar', (t.u || 0) + ' kishi') +
-      kv('Didox · bugun', (t.dx || 0) + (t.dl != null ? ' / ' + money(t.dl) : ' · cheklovsiz')) + '</div>';
+      kv('Didox · bugun', (t.dx || 0) + (t.dl != null ? ' / ' + money(t.dl) : ' · cheklovsiz')) +
+      (t.mk ? kv('Faollik', t.mk + ' ' + (t.sc || 0) + ' ball · faol kun ' + (t.ad || 0) + ' · bo‘lim ' + (t.ft || 0) + ' · fayl ' + (t.ex || 0) + (t.tc ? ' · tarif tanlagan' : '')) : '') + '</div>';
     h += '<div class="card"><h2>💳 To‘lov qabul qilindi</h2><div class="btns" style="margin-top:0">' + TN_PLANS.map(function (p) {
       return '<button class="btn' + (t.pl === p[0] && t.st === 'paid' ? ' on' : '') + '" data-pay="' + esc(t.id) + '" data-plan="' + p[0] + '">' + esc(p[1]) + '</button>';
     }).join('') + '</div><p class="hint" style="margin:10px 0 0">Tarif 30 kunga yoqiladi; oldindan to‘lansa — qolgan kunlar ustiga. Muzlatilgan mijozning Didox paroli o‘chgan — qayta ulash kerak bo‘ladi.</p></div>';
@@ -1185,7 +1197,9 @@
     if (sys.dir) h += kv('Hujjatlar papkasi', '<span style="font-size:12.5px;font-weight:500">' + esc(sys.dir) + '</span>');
     h += '</div>';
     h += '<div class="sec-title">' + ic('star') + 'Sotuv</div><div class="card"><div class="field"><div class="lbl">Demo bot</div><div class="sub">Yangi odam /start bosganda «Demo botni sinab ko‘rish» tugmasi shu botni ochadi.</div>' +
-      '<input type="text" id="demobot" placeholder="@material_demo_bot" value="' + esc(cur('demoBot') || '') + '"><div class="btns"><button class="btn" data-demosave="1">' + ic('check') + 'Qo‘llash</button></div></div></div>';
+      '<input type="text" id="demobot" placeholder="@material_demo_bot" value="' + esc(cur('demoBot') || '') + '"><div class="btns"><button class="btn" data-demosave="1">' + ic('check') + 'Qo‘llash</button></div></div>' +
+      '<div class="field"><div class="lbl">To‘lov rekvizitlari</div><div class="sub">Mijoz botda tarif tanlaganda ko‘radi: karta raqami, hisob raqami, bank, MFO. Bo‘sh bo‘lsa — «admin bog‘lanadi».</div>' +
+      '<textarea id="paydetails" rows="4" maxlength="600" placeholder="Karta: 8600 …&#10;yoki: H/r 2020 8000 …, bank, MFO, STIR">' + esc(cur('payDetails') || '') + '</textarea><div class="btns"><button class="btn" data-paysave="1">' + ic('check') + 'Qo‘llash</button></div></div></div>';
     h += '<div class="sec-title">' + ic('grid') + 'Bot tugmalari</div><div class="card"><div class="hint" style="margin:0 0 6px">Ixtiyoriy tugmalarni hamma uchun yashirish. Asosiy bo‘limlar doim ko‘rinadi.</div>';
     var off = D.off || [];
     Object.keys(S.sections).forEach(function (sec) {
@@ -1228,7 +1242,7 @@
   function kv(k, v) { return '<div class="kv"><span>' + esc(k) + '</span><b>' + v + '</b></div>'; }
   function upTime(m) { m = Number(m) || 0; if (m < 60) return m + ' daqiqa'; if (m < 1440) return Math.floor(m / 60) + ' soat ' + (m % 60) + ' daqiqa'; return Math.floor(m / 1440) + ' kun ' + Math.floor((m % 1440) / 60) + ' soat'; }
   function setLabel(k, v) {
-    var names = { pollMinutes: 'Yangi hujjatlarni tekshirish', syncIntervalHours: 'To‘liq yangilash', digestTime: 'Kunlik xabar', notifyDocs: 'Yangi hujjat xabari', notifyErrors: 'Xato xabarlari', weeklyReport: 'Haftalik hisobot', sheetsEnabled: 'Google jadval' };
+    var names = { pollMinutes: 'Yangi hujjatlarni tekshirish', syncIntervalHours: 'To‘liq yangilash', digestTime: 'Kunlik xabar', notifyDocs: 'Yangi hujjat xabari', notifyErrors: 'Xato xabarlari', weeklyReport: 'Haftalik hisobot', payDetails: 'To‘lov rekvizitlari', sheetsEnabled: 'Google jadval' };
     var val = typeof v === 'boolean' ? (v ? 'yoqiladi' : 'o‘chiriladi') : v == null || v === 0 ? 'o‘chiq' : k === 'pollMinutes' ? 'har ' + v + ' daqiqa' : k === 'syncIntervalHours' ? 'har ' + v + ' soat' : v;
     return (names[k] || k) + ': ' + val;
   }
@@ -1260,7 +1274,7 @@
 
   // ───────── bosishlar ─────────
   document.addEventListener('click', function (e) {
-    var t = e.target.closest('[data-share],[data-copy],[data-tab],[data-quick],[data-firm],[data-sync],[data-freeze],[data-ff],[data-pv],[data-rf],[data-people],[data-user],[data-guest],[data-demo],[data-tenant],[data-pay],[data-claim],[data-revoke],[data-unq],[data-submit],[data-clearq],[data-bc],[data-bcsend],[data-set],[data-demosave],[data-urole],[data-uapply],[data-umsg],[data-block],[data-del],[data-irole],[data-icreate],[data-open],[data-close],[data-journal],[data-fsec],[data-doc],[data-ddir],[data-negf],[data-logf],[data-backfirm],[data-logsheet]');
+    var t = e.target.closest('[data-share],[data-copy],[data-tab],[data-quick],[data-firm],[data-sync],[data-freeze],[data-ff],[data-pv],[data-rf],[data-people],[data-user],[data-guest],[data-demo],[data-tenant],[data-pay],[data-claim],[data-revoke],[data-unq],[data-submit],[data-clearq],[data-bc],[data-bcsend],[data-set],[data-demosave],[data-paysave],[data-urole],[data-uapply],[data-umsg],[data-block],[data-del],[data-irole],[data-icreate],[data-open],[data-close],[data-journal],[data-fsec],[data-doc],[data-ddir],[data-negf],[data-logf],[data-backfirm],[data-logsheet]');
     if (!t) return;
     var a = function (n) { return t.getAttribute(n); };
     if (a('data-close')) return closeSheet();
@@ -1343,6 +1357,11 @@
       var sk = a('data-set'), v = JSON.parse(a('data-v'));
       if (D.set[sk] === v) queue('set:' + sk, null); else queue('set:' + sk, ['set', sk, v], setLabel(sk, v));
       return refresh();
+    }
+    if (a('data-paysave')) {
+      var pv = $('paydetails').value.trim().slice(0, 600);
+      if ((D.set.payDetails || '') === pv) queue('set:payDetails', null); else queue('set:payDetails', ['set', 'payDetails', pv], 'To‘lov rekvizitlari: ' + (pv ? 'yangilandi' : 'olib tashlanadi'));
+      if (!S.live) toast('O‘zgarish qo‘shildi — «Saqlash» bosing'); return refresh();
     }
     if (a('data-demosave')) {
       var dv = $('demobot').value.trim();
