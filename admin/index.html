@@ -616,14 +616,12 @@
 
   // ═════════ ASOSIY ═════════
   function viewHome() {
-    var firms = D.firms || [], users = D.users || [], u = D.use || {}, lic = D.lic || {}, sys = D.sys || {};
+    var firms = D.firms || [], users = D.users || [], u = D.use || {}, sys = D.sys || {};
     var active = firms.filter(function (f) { return !f.fz; });
     var stock = active.reduce(function (n, f) { return n + (Number(f.s) || 0); }, 0);
     var bad = badFirms();
     var warns = [];
     if (!sys.tok && !D.demo) warns.push(['bad', 'key', 'Didox partner tokeni yozilmagan', 'Botda: 🏠 Bosh menyu → ⚙️ Sozlamalar → 📡 Tizim holati → Partner tokeni']);
-    if (lic.st === 'expired') warns.push(['bad', 'shield', 'Obuna muddati tugagan', 'Didox’dan yangilash to‘xtagan. Uzaytirish uchun sotuvchiga murojaat qiling.']);
-    else if (lic.st === 'grace' || lic.st === 'expiring') warns.push(['warn', 'shield', 'Obuna tugayapti', (lic.until ? day(lic.until) + ' gacha' : '') + (lic.left != null ? ' · ' + lic.left + ' kun qoldi' : '')]);
     var h = '';
     var attn = active.filter(function (f) { return stateOf(f)[0] !== 'ok'; }).length;
     var hc = bad.length || warns.some(function (w) { return w[0] === 'bad'; }) ? ['bad', bad.length ? bad.length + ' ta tashkilotda muammo' : 'Diqqat talab qilinadi'] : warns.length || attn ? ['warn', attn ? attn + ' ta tashkilotda diqqat kerak' : 'Diqqat talab qilinadi'] : ['ok', 'Hammasi joyida'];
@@ -911,11 +909,9 @@
 
   // ═════════ ODAMLAR ═════════
   function viewPeople() {
-    var users = D.users || [], guests = D.guests || [], inv = D.inv || [], dm = D.dm;
+    var users = D.users || [], guests = D.guests || [], inv = D.inv || [];
     var h = '<div class="page-title">Odamlar</div>';
-    // 🧪 Demo bot — alohida bot va baza; bo'lim faqat demo nusxa bo'lsa chiqadi
     var segs = [['users', 'Foydalanuvchi', users.length], ['inv', 'Takliflar', inv.length], ['guests', 'Qiziqqanlar', guests.length]];
-    if (dm) segs.push(['demo', 'Demo', dm.n || 0]);
     // 🏢 Mijozlar (tenant) — o'z firmasini ulagan sinov/pullik mijozlar; faqat bor bo'lsa
     if (D.tn) segs.splice(1, 0, ['tenants', 'Mijozlar', (D.tn.list || []).length]);
     h += '<div class="seg">' + segs.map(function (x) {
@@ -957,8 +953,6 @@
       h += '<p class="hint">Havola bir marta ishlaydi va 24 soat amal qiladi. Ochgan odam taklifdagi rol bilan botga kiradi.</p>';
     } else if (ui.peopleView === 'tenants' && D.tn) {
       h += viewTenants(D.tn, match);
-    } else if (ui.peopleView === 'demo' && dm) {
-      h += viewDemo(dm, match);
     } else {
       if (guests.length > 6) h += '<div class="search">' + ic('search') + '<input type="search" id="peopleq" placeholder="Ism yoki Telegram ID" value="' + esc(ui.peopleQ) + '"></div>';
       h += '<p class="hint" style="margin-top:0">Botni ochgan, lekin hali foydalanuvchi bo‘lmagan odamlar — ehtimoliy mijozlar. Ularga xabar yozish mumkin.</p>';
@@ -1035,58 +1029,6 @@
     openSheet(h);
   }
 
-  // ═════════ 🧪 DEMO BOT ═════════
-  // Demo — alohida bot (o'z bazasi). Bu yerda faqat ko'rinadi: kim, qachon, necha marta.
-  // Asosiy botdan ularga xabar yuborib bo'lmaydi — faqat asosiy botni ham ochgan bo'lsa (o'sha yerda)
-  function inMain(id) {
-    return (D.users || []).find(function (x) { return String(x.id) === String(id); }) || (D.guests || []).find(function (x) { return String(x.id) === String(id); }) || null;
-  }
-  function viewDemo(dm, match) {
-    var list = (dm.list || []).filter(match);
-    var h = '<div class="card">' +
-      kv('Demo bot', dm.u ? '<a href="#" data-open="https://t.me/' + esc(dm.u) + '">@' + esc(dm.u) + '</a>' : '—') +
-      kv('Holati', dm.on ? '<span class="pill p-ok">Ishlayapti</span>' : '<span class="pill p-bad">To‘xtagan</span>' + (dm.at ? ' · oxirgi belgi ' + ago(dm.at) : '')) +
-      kv('Jami kirganlar', (dm.n || 0) + ' kishi') +
-      kv('Faol · 24 soat / 7 kun', (dm.d1 || 0) + ' / ' + (dm.d7 || 0) + ' kishi') +
-      kv('Yangi · 7 kun', (dm.nw || 0) + ' kishi') + '</div>';
-    if (dm.err) h += '<p class="hint">Demo bazasini o‘qib bo‘lmadi: ' + esc(dm.err) + '</p>';
-    // 📲 Ulanish uchun arizalar (2026-10-15) — demo tanishuvi oxirida mijoz raqamini yuboradi
-    if ((dm.ld || []).length) {
-      h += '<div class="card"><h2>📲 Arizalar · ' + dm.ld.length + '</h2><div class="list">';
-      dm.ld.forEach(function (x) {
-        h += '<a class="row" href="tel:' + esc(x.p) + '">' + ava(x.n, x.id) + '<div class="grow"><div class="t1">' + esc(x.n || 'Ismsiz') + (x.u ? ' · @' + esc(x.u) : '') + '</div>' +
-          '<div class="t2">' + esc(x.p) + ' · ' + ago(x.at) + (x.o ? ' · boshqa odam raqami' : '') + '</div></div>' + ic('chev', 'chev') + '</a>';
-      });
-      h += '</div></div>';
-    }
-    if ((dm.list || []).length > 6) h += '<div class="search">' + ic('search') + '<input type="search" id="peopleq" placeholder="Ism yoki Telegram ID" value="' + esc(ui.peopleQ) + '"></div>';
-    h += '<div class="card"><div class="list">';
-    if (!list.length) h += '<div class="empty">' + ic('users') + '<div>Demo botni hali hech kim ochmagan</div></div>';
-    list.forEach(function (g) {
-      var fresh = Date.now() - new Date(g.fs).getTime() < 3 * 86400e3;
-      h += '<button class="row" data-demo="' + esc(g.id) + '">' + ava(g.n, g.id) + '<div class="grow"><div class="t1">' + esc(g.n || 'Ismsiz') + '</div>' +
-        '<div class="t2">Oxirgi marta ' + ago(g.ls) + ' · ' + (g.h || 0) + ' marta</div></div>' +
-        (g.me ? '<span class="pill p-gray">Siz</span>' : fresh ? '<span class="pill p-blue">Yangi</span>' : '') + ic('chev', 'chev') + '</button>';
-    });
-    h += '</div></div>';
-    h += '<p class="hint">Demo — alohida bot, namuna ma’lumot bilan. Bu yerda faqat ko‘rinadi; xabar yozish — agar odam asosiy botni ham ochgan bo‘lsa.</p>';
-    return h;
-  }
-  function demoSheet(id) {
-    reopen = null;
-    var g = ((D.dm && D.dm.list) || []).find(function (x) { return String(x.id) === String(id); });
-    if (!g) return;
-    var h = sheetHead(g.n || 'Ismsiz', g.me ? 'Demo bot · bu siz' : 'Demo bot foydalanuvchisi', null, null, ava(g.n, g.id));
-    h += '<div class="card">' + kv('Telegram ID', '<code>' + esc(g.id) + '</code>') + kv('Birinchi marta', dt(g.fs)) + kv('Oxirgi marta', dt(g.ls)) + kv('Demoga kirishlar', (g.h || 0) + ' marta') + '</div>';
-    var m = g.me ? null : inMain(g.id);
-    if (m) {
-      var isUser = (D.users || []).some(function (x) { return String(x.id) === String(g.id); });
-      h += '<div class="card"><h2>Asosiy botda</h2>' + kv('Holati', isUser ? 'Foydalanuvchi' : 'Qiziqqan (botni ochgan)') + kv('Oxirgi marta', ago(m.ls)) +
-        '<div class="btns"><button class="btn primary" data-' + (isUser ? 'user' : 'guest') + '="' + esc(g.id) + '">' + ic('chat') + 'Ochish va xabar yozish</button></div></div>';
-    } else if (!g.me) h += '<p class="hint">Bu odam asosiy botni ochmagan — unga botdan xabar yuborib bo‘lmaydi. Telegram ID orqali o‘zingiz bog‘lanishingiz mumkin.</p>';
-    openSheet(h);
-  }
-
   var editing = null;
   function userSheet(id) {
     reopen = function () { userSheet(id); };
@@ -1119,7 +1061,7 @@
     if (!g) return;
     var h = sheetHead(g.n || 'Ismsiz', 'Qiziqqan · botni ochgan', null, null, ava(g.n, g.id));
     h += '<div class="card">' + kv('Telegram ID', '<code>' + esc(g.id) + '</code>') + kv('Birinchi marta', dt(g.fs)) + kv('Oxirgi marta', dt(g.ls)) + kv('Botga kirishlar', g.h + ' marta') + '</div>';
-    h += msgCard(g.id, g.n || 'Ismsiz', 'Masalan: Assalomu alaykum! Material Hisobot bo‘yicha savollaringiz bormi? Demo uchun vaqt kelishamizmi?');
+    h += msgCard(g.id, g.n || 'Ismsiz', 'Masalan: Assalomu alaykum! Material Hisobot bo‘yicha savollaringiz bormi? O‘z firmangizni 5 kun bepul ulab ko‘ring — /start');
     h += '<p class="hint">Botga kiritish uchun: Odamlar → Yangi odam taklif qilish. Bot havolani sizga yuboradi — uni shu odamga jo‘nating.</p>';
     openSheet(h);
   }
@@ -1176,7 +1118,7 @@
   // ═════════ SOZLAMALAR ═════════
   function cur(key) { var q = queued('set:' + key); return q ? q.a[2] : (D.set || {})[key]; }
   function viewSet() {
-    var sys = D.sys || {}, lic = D.lic || {};
+    var sys = D.sys || {};
     var h = '<div class="page-title">Sozlamalar</div>';
     h += '<div class="sec-title">' + ic('refresh') + 'Avtomatik yangilash</div><div class="card">';
     h += field('Yangi hujjatlarni tekshirish', 'Didox qancha vaqtda bir tekshirilsin', S.poll.map(function (m) { return chip('pollMinutes', m, m ? m + ' daq' : 'O‘chiq'); }).join(''));
@@ -1196,8 +1138,7 @@
     if (sys.gf) h += kv('Google Drive papka', '<a href="#" data-open="' + esc(sys.gf) + '">Ochish ›</a>');
     if (sys.dir) h += kv('Hujjatlar papkasi', '<span style="font-size:12.5px;font-weight:500">' + esc(sys.dir) + '</span>');
     h += '</div>';
-    h += '<div class="sec-title">' + ic('star') + 'Sotuv</div><div class="card"><div class="field"><div class="lbl">Demo bot</div><div class="sub">Yangi odam /start bosganda «Demo botni sinab ko‘rish» tugmasi shu botni ochadi.</div>' +
-      '<input type="text" id="demobot" placeholder="@material_demo_bot" value="' + esc(cur('demoBot') || '') + '"><div class="btns"><button class="btn" data-demosave="1">' + ic('check') + 'Qo‘llash</button></div></div>' +
+    h += '<div class="sec-title">' + ic('star') + 'Sotuv</div><div class="card">' +
       '<div class="field"><div class="lbl">To‘lov rekvizitlari</div><div class="sub">Mijoz botda tarif tanlaganda ko‘radi: karta raqami, hisob raqami, bank, MFO. Bo‘sh bo‘lsa — «admin bog‘lanadi».</div>' +
       '<textarea id="paydetails" rows="4" maxlength="600" placeholder="Karta: 8600 …&#10;yoki: H/r 2020 8000 …, bank, MFO, STIR">' + esc(cur('payDetails') || '') + '</textarea><div class="btns"><button class="btn" data-paysave="1">' + ic('check') + 'Qo‘llash</button></div></div></div>';
     h += '<div class="sec-title">' + ic('grid') + 'Bot tugmalari</div><div class="card"><div class="hint" style="margin:0 0 6px">Ixtiyoriy tugmalarni hamma uchun yashirish. Asosiy bo‘limlar doim ko‘rinadi.</div>';
@@ -1215,14 +1156,10 @@
       h += '</details>';
     });
     h += '</div>';
-    var licState = { valid: ['ok', 'Faol'], ok: ['ok', 'Faol'], expiring: ['warn', (lic.left || 0) + ' kun qoldi'], grace: ['warn', 'Muddati o‘tdi'], expired: ['bad', 'Tugagan'] }[lic.st] || ['gray', lic.st || '—'];
     h += '<div class="sec-title">' + ic('shield') + 'Tizim</div><div class="card">';
     h += kv('Bot', D.bot && D.bot.u ? '@' + esc(D.bot.u) : '—');
     h += kv('Versiya', esc((D.bot && D.bot.ver) || '—'));
     h += kv('Ishlayapti', D.bot && D.bot.up != null ? upTime(D.bot.up) : '—');
-    h += kv('Obuna', esc(lic.plan || '—') + ' <span class="pill p-' + licState[0] + '">' + licState[1] + '</span>');
-    if (lic.until) h += kv('Amal qiladi', day(lic.until) + ' gacha');
-    if (lic.firms) h += kv('Tarif chegarasi', (lic.firms > 999 ? 'cheksiz' : lic.firms) + ' tashkilot · ' + (lic.users > 999 ? 'cheksiz' : lic.users) + ' foydalanuvchi');
     h += kv('Oxirgi to‘liq yangilash', sys.full ? dt(sys.full) + (sys.fullErr ? ' <span class="pill p-bad">' + sys.fullErr + ' xato</span>' : '') : 'hali bo‘lmagan');
     h += kv('Tezkor tekshiruv', sys.quick ? ago(sys.quick) : '—');
     h += kv('Zaxira nusxa', sys.bk ? esc(sys.bk) : 'hali olinmagan');
@@ -1274,7 +1211,7 @@
 
   // ───────── bosishlar ─────────
   document.addEventListener('click', function (e) {
-    var t = e.target.closest('[data-share],[data-copy],[data-tab],[data-quick],[data-firm],[data-sync],[data-freeze],[data-ff],[data-pv],[data-rf],[data-people],[data-user],[data-guest],[data-demo],[data-tenant],[data-pay],[data-claim],[data-revoke],[data-unq],[data-submit],[data-clearq],[data-bc],[data-bcsend],[data-set],[data-demosave],[data-paysave],[data-urole],[data-uapply],[data-umsg],[data-block],[data-del],[data-irole],[data-icreate],[data-open],[data-close],[data-journal],[data-fsec],[data-doc],[data-ddir],[data-negf],[data-logf],[data-backfirm],[data-logsheet]');
+    var t = e.target.closest('[data-share],[data-copy],[data-tab],[data-quick],[data-firm],[data-sync],[data-freeze],[data-ff],[data-pv],[data-rf],[data-people],[data-user],[data-guest],[data-tenant],[data-pay],[data-claim],[data-revoke],[data-unq],[data-submit],[data-clearq],[data-bc],[data-bcsend],[data-set],[data-paysave],[data-urole],[data-uapply],[data-umsg],[data-block],[data-del],[data-irole],[data-icreate],[data-open],[data-close],[data-journal],[data-fsec],[data-doc],[data-ddir],[data-negf],[data-logf],[data-backfirm],[data-logsheet]');
     if (!t) return;
     var a = function (n) { return t.getAttribute(n); };
     if (a('data-close')) return closeSheet();
@@ -1318,7 +1255,6 @@
     if (a('data-rf')) { ui.roleFilter = a('data-rf'); haptic(); return refresh(); }
     if (a('data-user')) return userSheet(a('data-user'));
     if (a('data-guest')) return guestSheet(a('data-guest'));
-    if (a('data-demo')) return demoSheet(a('data-demo'));
     if (a('data-tenant')) return tenantSheet(a('data-tenant'));
     if (a('data-pay')) {
       var pt = a('data-pay'), pp = a('data-plan');
@@ -1361,12 +1297,6 @@
     if (a('data-paysave')) {
       var pv = $('paydetails').value.trim().slice(0, 600);
       if ((D.set.payDetails || '') === pv) queue('set:payDetails', null); else queue('set:payDetails', ['set', 'payDetails', pv], 'To‘lov rekvizitlari: ' + (pv ? 'yangilandi' : 'olib tashlanadi'));
-      if (!S.live) toast('O‘zgarish qo‘shildi — «Saqlash» bosing'); return refresh();
-    }
-    if (a('data-demosave')) {
-      var dv = $('demobot').value.trim();
-      if (dv && !/^(?:https?:\/\/)?(?:t(?:elegram)?\.me\/)?@?[A-Za-z][A-Za-z0-9_]{3,31}\/?$/.test(dv)) { haptic('err'); return toast('Masalan: @material_demo_bot'); }
-      if ((D.set.demoBot || '') === dv) queue('set:demoBot', null); else queue('set:demoBot', ['set', 'demoBot', dv], 'Demo bot: ' + (dv || 'olib tashlanadi'));
       if (!S.live) toast('O‘zgarish qo‘shildi — «Saqlash» bosing'); return refresh();
     }
     if (a('data-urole')) {
