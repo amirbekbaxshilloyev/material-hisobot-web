@@ -378,6 +378,7 @@
     sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/>',
     alert: '<path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><path d="M12 9v4M12 17h.01"/>',
     check: '<path d="M20 6 9 17l-5-5"/>',
+    eye: '<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',
     shield: '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>',
     link: '<path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>',
     clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/>',
@@ -914,9 +915,19 @@
     var segs = [['users', 'Foydalanuvchi', users.length], ['inv', 'Takliflar', inv.length], ['guests', 'Qiziqqanlar', guests.length]];
     // 🏢 Mijozlar (tenant) — o'z firmasini ulagan sinov/pullik mijozlar; faqat bor bo'lsa
     if (D.tn) segs.splice(1, 0, ['tenants', 'Mijozlar', (D.tn.list || []).length]);
+    // 👁 Faollik — kim nima qilyapti (faqat jonli rejimda: so'ralganda o'qiladi)
+    if (S.live) segs.push(['act', 'Faollik', '👁']);
     h += '<div class="seg">' + segs.map(function (x) {
       return '<button data-pv="' + x[0] + '" class="' + (ui.peopleView === x[0] ? 'on' : '') + '">' + x[1] + ' · ' + x[2] + '</button>';
     }).join('') + '</div>';
+    if (ui.peopleView === 'act' && S.live) {
+      h += '<div class="chips" style="margin-bottom:12px">' + [['all', 'Hammasi'], ['tn', '🏢 Mijozlar'], ['own', '🏠 Asosiy']].map(function (x) {
+        return '<button data-actf="' + x[0] + '" class="' + ((ui.actF || 'all') === x[0] ? 'on' : '') + '">' + x[1] + '</button>';
+      }).join('') + '</div>';
+      h += activityCard('', 'act-all');
+      h += '<p class="hint">Har odam: qaysi ekranni ochdi, qaysi tugmani bosdi, qaysi faylni oldi, nimani o‘zgartirdi, nimani qidirdi; ulash va tarif bosqichlari. Parol va sirlar yozilmaydi. 90 kun saqlanadi. Odam bosilsa — uning kartochkasi.</p>';
+      return h;
+    }
     var q = ui.peopleQ.toLowerCase();
     var match = function (x) { return !q || String(x.n || '').toLowerCase().indexOf(q) >= 0 || String(x.id).indexOf(q) >= 0; };
     if (ui.peopleView === 'users') {
@@ -1011,6 +1022,32 @@
     h += '</div></div>';
     return h;
   }
+  // ═════════ 👁 FAOLLIK ═════════
+  // Joy (karta) darhol chiziladi, ro'yxat — `/api/activity` dan keladi. `q` — 'chat=…' yoki 'tenant=…' ('' — hammasi)
+  var ACT = {};
+  function activityCard(q, elId, title) {
+    setTimeout(function () { loadActivity(q, elId); }, 0);
+    return '<div class="card">' + (title ? '<h2>' + ic('list') + esc(title) + '</h2>' : '') + '<div id="' + elId + '">' + loadingCard() + '</div></div>';
+  }
+  function loadActivity(q, elId) {
+    api('GET', '/api/activity' + (q ? '?' + q : '')).then(function (j) {
+      ACT[elId] = (j.activity && j.activity.list) || [];
+      renderActivity(elId, !q);
+    }).catch(function (e) { var el = document.getElementById(elId); if (el) el.innerHTML = '<div class="empty">' + ic('alert') + '<div>' + esc(e.message) + '</div></div>'; });
+  }
+  function renderActivity(elId, withWho) {
+    var el = document.getElementById(elId);
+    if (!el) return;
+    var f = ui.actF || 'all';
+    var list = (ACT[elId] || []).filter(function (r) { return !withWho || f === 'all' || (f === 'tn' ? r.t : !r.t); });
+    if (!list.length) { el.innerHTML = '<div class="empty">' + ic('list') + '<div>Hali yozuv yo‘q</div></div>'; return; }
+    el.innerHTML = '<div class="list">' + list.slice(0, 150).map(function (r) {
+      var who = withWho ? '<div class="t1">' + esc(r.n || r.c) + (r.tn ? ' <span class="pill p-blue">' + esc(r.tn) + '</span>' : '') + '</div>' : '';
+      var body = '<div class="grow">' + who + '<div style="font-size:14px;overflow-wrap:anywhere">' + esc(r.ic || '•') + ' ' + esc(r.w) + '</div><div class="t2">' + ago(r.at) + (r.f ? ' · ' + esc(r.f) : '') + '</div></div>';
+      return withWho ? '<button class="row" data-actu="' + esc(r.c) + '">' + ava(r.n, r.c) + body + ic('chev', 'chev') + '</button>' : '<div class="row flat">' + body + '</div>';
+    }).join('') + '</div>';
+  }
+
   function tenantSheet(id) {
     reopen = function () { tenantSheet(id); };
     var t = ((D.tn && D.tn.list) || []).find(function (x) { return String(x.id) === String(id); });
@@ -1026,6 +1063,10 @@
     h += '<div class="card"><h2>💳 To‘lov qabul qilindi</h2><div class="btns" style="margin-top:0">' + TN_PLANS.map(function (p) {
       return '<button class="btn' + (t.pl === p[0] && t.st === 'paid' ? ' on' : '') + '" data-pay="' + esc(t.id) + '" data-plan="' + p[0] + '">' + esc(p[1]) + '</button>';
     }).join('') + '</div><p class="hint" style="margin:10px 0 0">Tarif 30 kunga yoqiladi; oldindan to‘lansa — qolgan kunlar ustiga. Muzlatilgan mijozning Didox paroli o‘chgan — qayta ulash kerak bo‘ladi.</p></div>';
+    // 👁 Mijoz sifatida ko'rish — botda o'sha mijozning ekranlari (faqat ko'rish)
+    h += '<div class="card"><h2>👁 Mijoz sifatida ko‘rish</h2><div class="btns" style="margin-top:0"><button class="btn primary" data-viewas="' + esc(t.id) + '">' + ic('eye') + 'Botda ochish</button></div>' +
+      '<p class="hint" style="margin:10px 0 0">Bot sizga shu mijozning boti qanday bo‘lsa, shunday ko‘rinadi. Hech narsa o‘zgarmaydi, mijoz sezmaydi. Chiqish — botdagi «👁 Ko‘rish rejimidan chiqish».</p></div>';
+    if (S.live) h += activityCard('tenant=' + encodeURIComponent(t.id), 'act-t-' + t.id, 'Faollik — kim nima qildi');
     openSheet(h);
   }
 
@@ -1048,6 +1089,7 @@
     h += '<div id="rclient"' + (editing.role === 'client' ? '' : ' hidden') + '><div class="sub" style="color:var(--hint);font-size:13px;margin-bottom:8px">Firma egasi faqat o‘z tashkilotini ko‘radi, hech narsani o‘zgartirmaydi.</div>' + firmSelect('uclient', (rq && rq.a[3]) || u.ft) + '</div>';
     h += '<div class="btns"><button class="btn primary" data-uapply="' + esc(u.id) + '">' + ic('check') + 'Qo‘llash</button></div></div>';
     h += msgCard(u.id, userName(u));
+    if (S.live) h += activityCard('chat=' + encodeURIComponent(u.id), 'act-u-' + u.id, 'Faollik');
     h += '<div class="card"><h2>Kirishni boshqarish</h2><div class="btns" style="margin-top:0">' + (blocked
       ? '<button class="btn" data-block="' + esc(u.id) + '" data-on="0">' + ic('check') + 'Qayta ochish</button>'
       : '<button class="btn danger" data-block="' + esc(u.id) + '" data-on="1">' + ic('ban') + 'To‘xtatib qo‘yish</button>') +
@@ -1211,7 +1253,7 @@
 
   // ───────── bosishlar ─────────
   document.addEventListener('click', function (e) {
-    var t = e.target.closest('[data-share],[data-copy],[data-tab],[data-quick],[data-firm],[data-sync],[data-freeze],[data-ff],[data-pv],[data-rf],[data-people],[data-user],[data-guest],[data-tenant],[data-pay],[data-claim],[data-revoke],[data-unq],[data-submit],[data-clearq],[data-bc],[data-bcsend],[data-set],[data-paysave],[data-urole],[data-uapply],[data-umsg],[data-block],[data-del],[data-irole],[data-icreate],[data-open],[data-close],[data-journal],[data-fsec],[data-doc],[data-ddir],[data-negf],[data-logf],[data-backfirm],[data-logsheet]');
+    var t = e.target.closest('[data-share],[data-copy],[data-tab],[data-quick],[data-firm],[data-sync],[data-freeze],[data-ff],[data-pv],[data-rf],[data-people],[data-user],[data-guest],[data-tenant],[data-actf],[data-actu],[data-viewas],[data-pay],[data-claim],[data-revoke],[data-unq],[data-submit],[data-clearq],[data-bc],[data-bcsend],[data-set],[data-paysave],[data-urole],[data-uapply],[data-umsg],[data-block],[data-del],[data-irole],[data-icreate],[data-open],[data-close],[data-journal],[data-fsec],[data-doc],[data-ddir],[data-negf],[data-logf],[data-backfirm],[data-logsheet]');
     if (!t) return;
     var a = function (n) { return t.getAttribute(n); };
     if (a('data-close')) return closeSheet();
@@ -1256,6 +1298,10 @@
     if (a('data-user')) return userSheet(a('data-user'));
     if (a('data-guest')) return guestSheet(a('data-guest'));
     if (a('data-tenant')) return tenantSheet(a('data-tenant'));
+    // 👁 Faollik: filtr, odam kartochkasi; mijoz sifatida ko'rish
+    if (a('data-actf')) { ui.actF = a('data-actf'); document.querySelectorAll('[data-actf]').forEach(function (b) { b.classList.toggle('on', b.getAttribute('data-actf') === ui.actF); }); return renderActivity('act-all', true); }
+    if (a('data-actu')) { var au = a('data-actu'); return (D.users || []).some(function (x) { return String(x.id) === au; }) ? userSheet(au) : (D.guests || []).some(function (x) { return String(x.id) === au; }) ? guestSheet(au) : toast('Bu odam endi ro‘yxatda yo‘q'); }
+    if (a('data-viewas')) { var vt = a('data-viewas'); return confirmBox(tnName(vt) + ' — botda mijoz sifatida ochilsinmi? (faqat ko‘rish)', function () { submit([['view', Number(vt)]]); }); }
     if (a('data-pay')) {
       var pt = a('data-pay'), pp = a('data-plan');
       return confirmBox(tnName(pt) + ': to‘lov qabul qilindimi? «' + pp + '» tarifi 30 kunga yoqiladi.' + closes(), function () { submit([['pay', Number(pt), pp]]); });
