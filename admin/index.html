@@ -1182,7 +1182,7 @@
     h += '</div>';
     h += '<div class="sec-title">' + ic('star') + 'Sotuv</div><div class="card">' +
       '<div class="field"><div class="lbl">To‘lov rekvizitlari</div><div class="sub">Mijoz botda tarif tanlaganda ko‘radi: karta raqami, hisob raqami, bank, MFO. Bo‘sh bo‘lsa — «admin bog‘lanadi».</div>' +
-      '<textarea id="paydetails" rows="4" maxlength="600" placeholder="Karta: 8600 …&#10;yoki: H/r 2020 8000 …, bank, MFO, STIR">' + esc(cur('payDetails') || '') + '</textarea><div class="btns"><button class="btn" data-paysave="1">' + ic('check') + 'Qo‘llash</button></div></div></div>';
+      '<textarea id="paydetails" rows="4" maxlength="600" placeholder="Karta: 8600 …&#10;yoki: H/r 2020 8000 …, bank, MFO, STIR">' + esc(cur('payDetails') || '') + '</textarea><div class="btns"><button class="btn primary" id="paysave" data-paysave="1" disabled>' + ic('check') + 'Saqlangan</button></div></div></div>';
     h += '<div class="sec-title">' + ic('grid') + 'Bot tugmalari</div><div class="card"><div class="hint" style="margin:0 0 6px">Ixtiyoriy tugmalarni hamma uchun yashirish. Asosiy bo‘limlar doim ko‘rinadi.</div>';
     var off = D.off || [];
     Object.keys(S.sections).forEach(function (sec) {
@@ -1312,6 +1312,8 @@
     }
     if (a('data-revoke')) {
       var code = a('data-revoke');
+      // Jonli panelda darhol bajariladi — avval so'raladi (ilgari tasdiqsiz bekor bo'lardi)
+      if (S.live) return confirmBox('Taklif havolasi bekor qilinsinmi? U endi ishlamaydi.', function () { queue('revoke:' + code, ['revoke', code], 'Taklif havolasini bekor qilish'); });
       if (queued('revoke:' + code)) queue('revoke:' + code, null); else queue('revoke:' + code, ['revoke', code], 'Taklif havolasini bekor qilish');
       return refresh();
     }
@@ -1342,7 +1344,9 @@
     }
     if (a('data-paysave')) {
       var pv = $('paydetails').value.trim().slice(0, 600);
-      if ((D.set.payDetails || '') === pv) queue('set:payDetails', null); else queue('set:payDetails', ['set', 'payDetails', pv], 'To‘lov rekvizitlari: ' + (pv ? 'yangilandi' : 'olib tashlanadi'));
+      // 2026-10-19 (foydalanuvchi: «qo‘llashda rangi o‘zgarmagan»): o'zgarish bo'lmasa — aytiladi, jim qolmaydi
+      if ((D.set.payDetails || '') === pv) { queue('set:payDetails', null); haptic('err'); return toast('O‘zgarish yo‘q — rekvizitlar avvalgidek'); }
+      queue('set:payDetails', ['set', 'payDetails', pv], 'To‘lov rekvizitlari: ' + (pv ? 'yangilandi' : 'olib tashlanadi'));
       if (!S.live) toast('O‘zgarish qo‘shildi — «Saqlash» bosing'); return refresh();
     }
     if (a('data-urole')) {
@@ -1353,18 +1357,25 @@
     }
     if (a('data-uapply')) {
       var uid = a('data-uapply'), u = D.users.find(function (x) { return String(x.id) === uid; });
-      queue('role:' + uid, null); queue('firms:' + uid, null);
+      // Avval hamma o'zgarish yig'iladi: jonli panelda — bitta so'rov (ilgari rol va tashkilotlar ikki so'rov bo'lib
+      // ketardi), o'zgarish bo'lmasa — «O‘zgarish yo‘q» (ilgari oyna jim yopilardi)
+      var acts = [];
       if (editing.role === 'client') {
         var tinC = $('uclient').value;
-        if (!(u.r === 'client' && u.ft === tinC)) queue('role:' + uid, ['role', uid, 'client', tinC], userName(u) + ' → firma egasi (' + firmName(tinC) + ')');
+        if (!(u.r === 'client' && u.ft === tinC)) acts.push(['role:' + uid, ['role', uid, 'client', tinC], userName(u) + ' → firma egasi (' + firmName(tinC) + ')']);
       } else {
         var list = readFirmChecks();
         if (list && !list.length) { haptic('err'); return toast('Kamida bitta tashkilotni belgilang'); }
-        if (u.r !== 'user') queue('role:' + uid, ['role', uid, 'user'], userName(u) + ' → buxgalter');
+        if (u.r !== 'user') acts.push(['role:' + uid, ['role', uid, 'user'], userName(u) + ' → buxgalter']);
         var same = u.r === 'user' && JSON.stringify(u.fs ? u.fs.slice().sort() : null) === JSON.stringify(list ? list.slice().sort() : null);
-        if (!same) queue('firms:' + uid, ['firms', uid, list], userName(u) + ' ko‘radi: ' + (list ? list.map(firmName).join(', ') : 'hamma tashkilot'));
+        if (!same) acts.push(['firms:' + uid, ['firms', uid, list], userName(u) + ' ko‘radi: ' + (list ? list.map(firmName).join(', ') : 'hamma tashkilot')]);
       }
-      closeSheet(); if (!S.live) toast(Q.length ? 'O‘zgarish qo‘shildi — «Saqlash» bosing' : 'O‘zgarish yo‘q'); return refresh();
+      if (!acts.length) { haptic('err'); return toast('O‘zgarish yo‘q — avvalgidek'); }
+      closeSheet();
+      if (S.live) return run(acts.map(function (x) { return x[1]; }));
+      queue('role:' + uid, null); queue('firms:' + uid, null);
+      acts.forEach(function (x) { queue(x[0], x[1], x[2]); });
+      toast('O‘zgarish qo‘shildi — «Saqlash» bosing'); return refresh();
     }
     if (a('data-umsg')) {
       var mid = a('data-umsg'), mt = $('umsg').value.trim();
@@ -1399,6 +1410,15 @@
     if (id === 'firmq' || id === 'peopleq') {
       if (id === 'firmq') ui.firmQ = e.target.value; else ui.peopleQ = e.target.value;
       var pos = e.target.selectionStart; render(); var el = $(id); if (el) { el.focus(); el.setSelectionRange(pos, pos); }
+    }
+    if (id === 'paydetails') {
+      // «Qo‘llash» — matn saqlangandan farq qilgandagina faol (ko'k)
+      var pb = $('paysave');
+      if (pb) {
+        var same = e.target.value.trim().slice(0, 600) === (D.set.payDetails || '');
+        if (pb.disabled !== same) { pb.disabled = same; pb.innerHTML = ic('check') + (same ? 'Saqlangan' : 'Qo‘llash'); }
+      }
+      return;
     }
     if (id === 'docq') {
       ui.docQ = e.target.value;
