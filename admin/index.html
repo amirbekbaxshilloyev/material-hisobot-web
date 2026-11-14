@@ -1058,6 +1058,7 @@
       (t.st === 'expired' && t.da ? kv('Muzlatiladi', dt(t.da)) : '') + (t.fz ? kv('Muzlatilgan', dt(t.fz)) : '') +
       kv('Firmalar', (t.f || []).length ? (t.f || []).map(function (x) { return '<code>' + esc(x) + '</code>'; }).join(', ') : '—') +
       kv('Odamlar', (t.u || 0) + ' kishi') +
+      (t.lw ? kv('🔐 Yangilanmayapti', t.lw.map(function (x) { return '<code>' + esc(x[0]) + '</code> — ' + x[1] + ' kundan beri'; }).join(', ') + ' · Didox paroli qayta yozilishi kerak') : '') +
       kv('Didox · bugun', (t.dx || 0) + (t.dl != null ? ' / ' + money(t.dl) : ' · cheklovsiz')) +
       (t.mk ? kv('Faollik', t.mk + ' ' + (t.sc || 0) + ' ball · faol kun ' + (t.ad || 0) + ' · bo‘lim ' + (t.ft || 0) + ' · fayl ' + (t.ex || 0) + (t.tc ? ' · tarif tanlagan' : '')) : '') + '</div>';
     h += '<div class="card"><h2>💳 To‘lov qabul qilindi</h2><div class="btns" style="margin-top:0">' + TN_PLANS.map(function (p) {
@@ -1183,6 +1184,16 @@
     h += '<div class="sec-title">' + ic('star') + 'Sotuv</div><div class="card">' +
       '<div class="field"><div class="lbl">To‘lov rekvizitlari</div><div class="sub">Mijoz botda tarif tanlaganda ko‘radi: karta raqami, hisob raqami, bank, MFO. Bo‘sh bo‘lsa — «admin bog‘lanadi».</div>' +
       '<textarea id="paydetails" rows="4" maxlength="600" placeholder="Karta: 8600 …&#10;yoki: H/r 2020 8000 …, bank, MFO, STIR">' + esc(cur('payDetails') || '') + '</textarea><div class="btns"><button class="btn primary" id="paysave" data-paysave="1" disabled>' + ic('check') + 'Saqlangan</button></div></div></div>';
+    // 💾 Zaxira kanali (2026-10-29): ID kiritiladi → bot kanalga sinov xabari yuboradi → oxirgi nusxa darhol, keyin har kuni
+    var bk = D.bkc, bkv = cur('backupChannel') || '';
+    h += '<div class="sec-title">' + ic('shield') + 'Zaxira</div><div class="card">' +
+      '<div class="field"><div class="lbl">Zaxira kanali</div><div class="sub">Har kuni kechasi bazalar zaxirasi shu Telegram kanalga yuboriladi — shifrlangan, faqat o‘zgargani. Bot kanalda admin bo‘lishi kerak. Kanal ID’si: botni kanalga admin qilsangiz, bot o‘zi yozadi (yoki kanaldagi xabarni botga forward qiling). Bo‘sh qoldirilsa — zaxira faqat serverda.</div>' +
+      '<input id="bkchan" type="text" maxlength="40" autocomplete="off" placeholder="-1001234567890" value="' + esc(bkv) + '">' +
+      '<div class="btns"><button class="btn primary" id="bksave" data-bksave="1" disabled>' + ic('check') + 'Saqlangan</button></div></div>' +
+      kv('Holat', bkv ? '<span class="pill p-ok">Ulangan</span>' : '<span class="pill p-gray">Faqat serverda</span>') +
+      (bk ? kv('Oxirgi yuborish', esc(dt(bk.at)) + ' · ' + (bk.f || 0) + ' ta fayl' + (bk.b ? ', ' + (bk.b / 1048576).toFixed(0) + ' MB' : '') + (bk.sk ? ' · o‘zgarmagan ' + bk.sk : '')) : '') +
+      (bk && bk.e ? '<div class="hint" style="color:var(--bad)">⚠️ ' + bk.e.map(esc).join('<br>⚠️ ') + '</div>' : '') +
+      '</div>';
     h += '<div class="sec-title">' + ic('grid') + 'Bot tugmalari</div><div class="card"><div class="hint" style="margin:0 0 6px">Ixtiyoriy tugmalarni hamma uchun yashirish. Asosiy bo‘limlar doim ko‘rinadi.</div>';
     var off = D.off || [];
     Object.keys(S.sections).forEach(function (sec) {
@@ -1221,7 +1232,7 @@
   function kv(k, v) { return '<div class="kv"><span>' + esc(k) + '</span><b>' + v + '</b></div>'; }
   function upTime(m) { m = Number(m) || 0; if (m < 60) return m + ' daqiqa'; if (m < 1440) return Math.floor(m / 60) + ' soat ' + (m % 60) + ' daqiqa'; return Math.floor(m / 1440) + ' kun ' + Math.floor((m % 1440) / 60) + ' soat'; }
   function setLabel(k, v) {
-    var names = { pollMinutes: 'Yangi hujjatlarni tekshirish', syncIntervalHours: 'To‘liq yangilash', digestTime: 'Kunlik xabar', notifyDocs: 'Yangi hujjat xabari', notifyErrors: 'Xato xabarlari', weeklyReport: 'Haftalik hisobot', payDetails: 'To‘lov rekvizitlari', sheetsEnabled: 'Google jadval' };
+    var names = { pollMinutes: 'Yangi hujjatlarni tekshirish', syncIntervalHours: 'To‘liq yangilash', digestTime: 'Kunlik xabar', notifyDocs: 'Yangi hujjat xabari', notifyErrors: 'Xato xabarlari', weeklyReport: 'Haftalik hisobot', payDetails: 'To‘lov rekvizitlari', sheetsEnabled: 'Google jadval', backupChannel: 'Zaxira kanali' };
     var val = typeof v === 'boolean' ? (v ? 'yoqiladi' : 'o‘chiriladi') : v == null || v === 0 ? 'o‘chiq' : k === 'pollMinutes' ? 'har ' + v + ' daqiqa' : k === 'syncIntervalHours' ? 'har ' + v + ' soat' : v;
     return (names[k] || k) + ': ' + val;
   }
@@ -1253,7 +1264,7 @@
 
   // ───────── bosishlar ─────────
   document.addEventListener('click', function (e) {
-    var t = e.target.closest('[data-share],[data-copy],[data-tab],[data-quick],[data-firm],[data-sync],[data-freeze],[data-ff],[data-pv],[data-rf],[data-people],[data-user],[data-guest],[data-tenant],[data-actf],[data-actu],[data-viewas],[data-pay],[data-claim],[data-revoke],[data-unq],[data-submit],[data-clearq],[data-bc],[data-bcsend],[data-set],[data-paysave],[data-urole],[data-uapply],[data-umsg],[data-block],[data-del],[data-irole],[data-icreate],[data-open],[data-close],[data-journal],[data-fsec],[data-doc],[data-ddir],[data-negf],[data-logf],[data-backfirm],[data-logsheet]');
+    var t = e.target.closest('[data-share],[data-copy],[data-tab],[data-quick],[data-firm],[data-sync],[data-freeze],[data-ff],[data-pv],[data-rf],[data-people],[data-user],[data-guest],[data-tenant],[data-actf],[data-actu],[data-viewas],[data-pay],[data-claim],[data-revoke],[data-unq],[data-submit],[data-clearq],[data-bc],[data-bcsend],[data-set],[data-paysave],[data-bksave],[data-urole],[data-uapply],[data-umsg],[data-block],[data-del],[data-irole],[data-icreate],[data-open],[data-close],[data-journal],[data-fsec],[data-doc],[data-ddir],[data-negf],[data-logf],[data-backfirm],[data-logsheet]');
     if (!t) return;
     var a = function (n) { return t.getAttribute(n); };
     if (a('data-close')) return closeSheet();
@@ -1349,6 +1360,13 @@
       queue('set:payDetails', ['set', 'payDetails', pv], 'To‘lov rekvizitlari: ' + (pv ? 'yangilandi' : 'olib tashlanadi'));
       if (!S.live) toast('O‘zgarish qo‘shildi — «Saqlash» bosing'); return refresh();
     }
+    if (a('data-bksave')) {
+      var bv = $('bkchan').value.trim();
+      if ((D.set.backupChannel || '') === bv) { queue('set:backupChannel', null); haptic('err'); return toast('O‘zgarish yo‘q — kanal avvalgidek'); }
+      if (bv && !/^-100\d{6,15}$/.test(bv) && !/^@[A-Za-z][A-Za-z0-9_]{4,31}$/.test(bv)) { haptic('err'); return toast('Kanal ID -100… yoki @nom ko‘rinishida bo‘lsin'); }
+      queue('set:backupChannel', ['set', 'backupChannel', bv], 'Zaxira kanali: ' + (bv || 'o‘chiriladi'));
+      if (!S.live) toast('O‘zgarish qo‘shildi — «Saqlash» bosing'); return refresh();
+    }
     if (a('data-urole')) {
       editing.role = a('data-urole');
       document.querySelectorAll('[data-urole]').forEach(function (b) { b.classList.toggle('on', b.getAttribute('data-urole') === editing.role); });
@@ -1417,6 +1435,14 @@
       if (pb) {
         var same = e.target.value.trim().slice(0, 600) === (D.set.payDetails || '');
         if (pb.disabled !== same) { pb.disabled = same; pb.innerHTML = ic('check') + (same ? 'Saqlangan' : 'Qo‘llash'); }
+      }
+      return;
+    }
+    if (id === 'bkchan') {
+      var bb = $('bksave');
+      if (bb) {
+        var bsame = e.target.value.trim() === (D.set.backupChannel || '');
+        if (bb.disabled !== bsame) { bb.disabled = bsame; bb.innerHTML = ic('check') + (bsame ? 'Saqlangan' : 'Qo‘llash'); }
       }
       return;
     }
